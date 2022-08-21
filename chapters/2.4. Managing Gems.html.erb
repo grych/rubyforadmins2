@@ -1,0 +1,32 @@
+<%= bob_header 'Gems' %>
+<p>
+  Gem, in general, is a Ruby software package with standardized format. You may consider it as an additional software library, which gives an extention to standard Ruby package. Most of the Gems are kept in the RubyGems.org hosting service: <%= bob_link_to 'https://rubygems.org' %>. They are created by the community and everyone can build and post his own Gem. Of course, it is not mandatory to use the RubyGems.org, but it is the most convinient way to extend the Ruby.
+</p>
+<p class='commentable' id="gems">
+  With Ruby it comes another command line tool - <code>gem</code> - "a sophisticated package manager for the Ruby programming language". Like the other software package managers it allows to search, install and uninstall and create your own Gems. 
+</p>
+<p class='commentable' id="gem-list">
+  To see installed packaged, use <code>gem list</code>. You can see a list of Gems and their versions installed on the current Ruby version. If you are using <code>rbenv</code> or RVM, this list depends on which Ruby installation are you currently using!
+  <%= bob_code filename: '2.4.gem_list.txt' %>
+</p>
+<%= bob_header 'Searching for Gems' %>
+<p class='commentable' id="gem-search">
+  To find the required Gem visit <%= bob_link_to 'https://rubygems.org' %> or issue the <code>gem search --remote</code> command. By default this will search for all gems beggining with a string you gave, so <code>gem search --remote crypt</code> will find <code>crypt (2.0)</code> as well as <code>cryptor (0.0.0)</code>. To see more information on found Gems, add <code>--details</code> switch (but this could take more time, as it must download the information for all found packages). <code>gem search</code> allows standard wildcards like: <code>*</code> - any characters, <code>^</code> - begin of the string, <code>$</code> - end of the string.<br>
+  Example: we are looking for a gem to help with ROT13 (Caesar Cipher) string encryption. Let's check all gems ending with 'rot13' string:
+  <%= bob_code filename: '2.4.gem_search.txt' %>
+</p>
+<%= bob_header 'Installing Gems' %>
+<p class='commentable' id="gem-install">
+  Installing Gems is like installing the other software packages - with <code>gem install</code> command. This solves the dependencies, downloads the required package and installs it - everything with this one command. It installs the documentation for fetched Gems as well. 
+  <%= bob_code filename: '2.4.gem_install.txt' %>
+</p>
+<%= bob_header 'Using Gems' %>
+<p class='commentable' id="require">
+  Now you can use freshly installed Gem. There is no need to know where the package is installed, Gems are installed in the well-known path, under the current Ruby version. You can load the freshly installed gem with <code>require 'rot13'</code> statement and use it - in the example below run <code>Rot13#rotate</code> method:
+  <%= bob_code filename: '2.4.rot13_example.rb' %>
+</p>
+<%= bob_header 'Uninstalling Gems' %>
+<p class='commentable' id="uninstall">
+  To uninstall the gem, run <code>gem uninstall</code> command. If you have more than one version of the Gem, you must specify which one you want to delete using the <code>--version</code> switch or use the interactive mode:
+  <%= bob_code filename: '2.4.gem_uninstall.txt' %>
+</p>

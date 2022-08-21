@@ -1,0 +1,144 @@
+<%= bob_header 'Hashes' %>
+<p class='commentable' id="hashhashhash">
+  Hash is the another collection of objects. It is quite similar to array - it may contain a variety of objects. The difference is the index: in the array the index is a positive integer, in hashes the index could be any object (for the record: any <em>hashable</em> object). We call the index <code>key</code>, so we can say that <code>Hash</code> object is a collection of pairs: <code>key</code>, <code>value</code>.<br>
+</p>
+
+<%= bob_header 'Hash Syntax' %>
+<p class='commentable' id="hash-syntax">
+  The primary syntax for a hash is a curly bracket and <code>=></code> sequence to describe key and value: <code>{ key => value }</code>. Empty hash is <code>{}</code>.
+  <%= bob_code brush: :ruby do %>
+h = {1=>'one', 3=>'three', 'four'=>4, 2=>'two'}
+#=> {1=>"one", 3=>"three", "four"=>4, 2=>"two"}
+  <%  end %>
+</p>
+
+<%= bob_header 'Accessing Hashes' %>
+<p class='commentable' id="hash-access">
+  To get the object from the hash, use square brackets - the same way as in arrays. To update a value, assign it to the specified key. To add the pair key => value, use a new key.
+  <%= bob_code brush: :ruby do %>
+h = {1=>'one', 3=>'three', 'four'=>4, :two=>'two'}
+#=> {1=>"one", 3=>"three", "four"=>4, :two=>"two"}
+
+h[1]           # get object with key integer 1
+#=> "one"
+
+h["four"]      # get value of key string "four"
+#=> 4
+
+h[:two]="too"  # change the value of key :two
+#=> "too"
+
+h[:four]=4.0   # add a new entry: :four =>
+#=> 4.0
+
+h              # notice that "four" and :four are not the same keys
+#=> {1=>"one", 3=>"three", "four"=>4, :two=>"too", :four=>4.0}
+  <%  end %>
+</p>
+<%= bob_header 'Symbols as Hashes Keys' %>
+<p>
+  <%= bob_left_span %>
+  <p class='commentable' id="hash-keys">
+    <code>Symbol</code> object are very often used as a keys for hashes. To simplify the syntax Ruby introduces a special syntactic sugar: instead writing <code>{ :key => value }</code> you can use the colon syntax <code>{ key: value }</code>:
+  </p>
+  <%= bob_right_span %>
+    <p>
+      <em><u>Syntactic sugar</u> in programming is another way to write the same code, designed to be easier to write and remember for humans.</em>
+    </p>
+  <%= bob_end_spans %>
+
+  <%= bob_code brush: :ruby do %>
+h = {one: 1, two: 2, three: 'three'}
+#=> {:one=>1, :two=>2, :three=>"three"}
+  <%  end %>
+</p>
+
+<%= bob_header 'Default Hash Value' %>
+<p class='commentable' id="default-valur">
+  Hash returns <code>nil</code>, if key is not found. You can change this default value by adding a parameter to <code>Hash.new</code> constructor or use <code>default</code> method.
+  <%= bob_code brush: :ruby do %>
+h[:forty_two]  
+#=> nil              # key not found
+
+h.default = 42   # change the default value
+#=> 42
+
+h[:forty_two]    # hash returns default value when key not found
+#=> 42
+
+empty = Hash.new('forty two')  # another way to set up the default value
+#=> {}
+
+empty[42]                      # hash returns default value when key not found
+#=> "forty two"
+  <%  end %>
+</p>
+<%= bob_header 'Accessing Keys and Values' %>
+<p class='commentable' id="accessing-hashes">
+  There are methods to extract keys or values from the hash and to convert it to array of key/value pairs.
+  <%= bob_code brush: :ruby do %>
+h = {one: 1, two: 2, three: 'three'}
+#=> {:one=>1, :two=>2, :three=>"three"}
+
+h.keys                 # returns array of keys only
+#=> [:one, :two, :three]
+
+h.values               # returns array of values only
+#=> [1, 2, "three"]
+
+h.to_a                 # returns array of key/value pairs
+#=> [[:one, 1], [:two, 2], [:three, "three"]]
+  <%  end %>
+</p>
+
+<%= bob_header 'Inverting Hashes' %>
+<p class='commentable' id="invert">
+  To invert the hash (change keys to values and vice versa) use <code>invert</code> method. Be warned that it could change the size of the hash, because keys are unique, but values doesn't have to be.
+  <%= bob_code brush: :ruby do %>
+h = {one: 1, two: 2, three: 2}
+#=> {:one=>1, :two=>2, :three=>2}
+
+h.invert
+#=> {1=>:one, 2=>:three}  # inverted hash could be smaller than the original
+  <%  end %>
+</p>
+
+<%= bob_header 'Searching Hashes' %>
+<p class='commentable' id="seek">
+  To search for the value in a hash, use <code>key</code> method. This will return the key of the first found value.
+  <%= bob_code brush: :ruby do %>
+h = {one: 1, two: 2, three: 2}
+#=> {:one=>1, :two=>2, :three=>2}
+
+h.key(2)
+#=> :two
+  <%  end %>
+</p>
+
+<%= bob_header 'Deleting Object from Hashes' %>
+<p class='commentable' id="seek-and-destroy">
+  And to delete the element from the hash, use <code>delete</code> method
+  <%= bob_code brush: :ruby do %>
+h = {one: 1, two: 2, three: 2}
+#=> {:one=>1, :two=>2, :three=>2}
+
+h.delete(:three)
+#=> 2                  # delete returns the value of deleted key
+
+h                  # or nil if not found
+#=> {:one=>1, :two=>2}  
+  <%  end %>
+</p>
+
+<%= bob_header 'Merging Two Hashes' %>
+<p class='commentable' id="hashmegen">
+  Finally, quite often used function is <code>hash.merge(other_hash)</code>, which returns a new hash containing the both hashes. If there are the same keys, the one from <code>other_hash</code> overwrites.
+  <%= bob_code brush: :ruby do %>
+h = {1 => 'one', 2 => 'too'}
+#=> {1=>"one", 2=>"too"}
+
+h.merge({2=>'two', 3=>'three'})    # merge h with the other hash
+#=> {1=>"one", 2=>"two", 3=>"three"}   # key 2 is overwritten by the key from the other hash
+  <%  end %>
+</p>
+

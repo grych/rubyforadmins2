@@ -1,0 +1,100 @@
+<%= bob_header 'Comparable' %>
+<p class='commentable' id="comparable-mixin">
+  Now we know how to include the mixin into your class so take a look into Ruby built-in mixin called <code>Comparable</code>. This part of Ruby standard library provides a methods to compare the objects each other if they are equal, less or greater than other, and to sort the collection of such objects. Ruby built-in object, like Fixnum or String, use this mixin to provide comparing operator.
+  <%= bob_code brush: :ruby do %>
+Fixnum.ancestors
+#=> [Fixnum, Integer, Numeric, Comparable, Object, PP::ObjectMixin, Kernel, BasicObject]
+
+String.ancestors
+#=> [String, Comparable, Object, PP::ObjectMixin, Kernel, BasicObject]
+  <%  end %>
+</p>
+
+<%= bob_header 'The Comparable Protocol' %>
+<p class='commentable' id="comparable-proto">
+  If you want the object to be comparable, you must include the mixin and provide base method called <code><=></code> (a starship operator). This is a part of the protocol. That's the only requirement! Providing this method will allow you to use all the other operators without single line of code. <br>
+  To remind you how starship works: it returns -1 if the left object is greater than the right one, 0 when they are equal and 1 in case the right is greater then the left. <br>
+  To have an example, assume you want to arrange your <code>Server</code> objects by the number of processor and the amount of memory. The machine with more processor is bigger than the other and in case the number of processors is the same, the box with bigger amount of memory wins. The only need is to include Comparable mixin and provide the starship method to this object:
+  <%= bob_code brush: :ruby do %>
+class Server
+  attr_reader :name, :no_processors, :memory_gb  # we must provide readers to this attributes
+  include Comparable                             # because we are comparing the other Server with self
+  def initialize(name, no_processors, memory_gb)
+    @name = name
+    @no_processors = no_processors
+    @memory_gb = memory_gb
+  end
+  def inspect
+    "/Server: #{@name}: #{@no_processors} procs, #{@memory_gb} GiB mem/"
+  end
+  def <=>(other)
+    if self.no_processors == other.no_processors  # if there is the same number of procs
+      self.memory_gb <=> other.memory_gb          # comparing memory
+    else
+      self.no_processors <=> other.no_processors  # otherwise comparing the number of processors
+    end
+  end
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="comparable-proto-2">
+  The code just checks if the number of processors in both servers are the same, and if yes, returns the value of comparing the amount of memory. Notice that we could do it with some <em>if-then-else</em> statements like <code>if self.memory_gb < other.memory_gb then -1 else ...</code> but we do not have to, because Fixnum provides the startship operator, so we can just return the value of comparing two integers. <br>
+  Lets define some servers and try to compare them:
+  <%= bob_code brush: :ruby do %>
+yoda = Server.new('yoda', 32, 64)
+#=> /Server: yoda: 32 procs, 64 GiB mem/
+
+borg = Server.new('borg', 64, 128)
+#=> /Server: borg: 64 procs, 128 GiB mem/
+
+kirk = Server.new('kirk', 64, 64)
+#=> /Server: kirk: 64 procs, 64 GiB mem/
+
+vader = Server.new('vader', 64, 128)
+#=> /Server: vader: 64 procs, 128 GiB mem/
+
+borg > vader   # the same amount of processors and memory
+#=> false
+
+vader == borg  # so the servers supposed to be the same...(?)
+#=> true
+
+kirk > yoda    
+#=> true
+
+kirk.between? yoda, borg  # kirk is between yoda and borg
+#=> true
+  <%  end %>
+</p>
+
+<p class='commentable' id="equality-operator">
+  Everything looks fine except the equality. <code>vader == borg</code> makes sense from the Comparable mixin point of view, but they are not the same servers at all. The much better would be to assume the servers are equal when they have the same name. For this we may simply override the equality operator:
+  <%= bob_code brush: :ruby do %>
+class Server
+  def ==(other)
+    self.name == other.name
+  end
+end
+
+vader == borg                    # now looks better
+#=> false
+
+kirk == Server.new('kirk', 0, 0) # only the name counts in eqality operator
+#=> true
+  <%  end %>
+</p>
+
+<p>
+  The other interesting effect is that the Comparable object became sortable. You can now put them into an array and sort or find minimum and maximum of the collection:
+  <%= bob_code brush: :ruby do %>
+[vader, yoda, borg, kirk].sort
+#=> [/Server: yoda: 32 procs, 64 GiB mem/, /Server: kirk: 64 procs, 64 GiB mem/, /Server: borg: 64 procs, 128 GiB mem/, /Server: vader: 64 procs, 128 GiB mem/]
+
+[vader, yoda, borg, kirk].max
+#=> /Server: vader: 64 procs, 128 GiB mem/
+
+[vader, yoda, borg, kirk].min
+#=> /Server: yoda: 32 procs, 64 GiB mem/
+  <%  end %>
+</p>

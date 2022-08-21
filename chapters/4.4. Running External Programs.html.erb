@@ -1,0 +1,199 @@
+<%= bob_header '`Backticks`' %>
+<p class='commentable' id='backticks'>
+  The simplest way to run external command is to surround it with <em>backticks</em>, exactly like in the Shell scripts. This will return string containing <code>stdout</code> of the command. You can use <em>expression substitution <code>#{}</code></em> inside a backtics, just like in strings
+  <%= bob_code brush: :ruby do %>
+`pwd`
+#=> "/Users/turbo\n"   # note ls returns string ending with a newline
+`pwd`.chomp        # so it is good to get rid of it
+#=> "/Users/turbo"
+
+path = '/etc'
+#=> "/etc"
+`ls #{path}`               # you can use expression subsitution
+#=> "afpovertcp.cfg\naliases\naliases.db\napache2\..."
+`ls #{path}`.split(/\n/)   # convert the output to an array
+#=> ["afpovertcp.cfg", "aliases", "aliases.db", "apache2"]
+
+`ls /tmmp`   # non-existing dir
+ls: /tmmp: No such file or directory
+#=> ""           # stdout is empty, stderr is not passed (but displayed above)    
+  <% end %>
+</p>
+
+<p class='commentable' id='returncode'>
+  Exactly like in the Shell, you may get the return code of the last command. There is a pre-defined global variable <code>$?</code> for that, but unlike in the Shell it returns not only the return code, but the whole <code>Process::Status</code> objects. You can get the exit code integer using <code>existstatus</code> method or just check if the command ends with <code>success?</code>:
+  <%= bob_code brush: :ruby do %>
+`ls /nonexistent`
+ls: /nonexistent: No such file or directory
+#=> ""
+$?
+#=> #&lt;Process::Status: pid 98527 exit 1&gt;
+$?.pid
+#=> 98527
+$?.exitstatus
+#=> 1
+$?.success?
+#=> false
+  <% end %>
+</p>
+
+<%= bob_header 'Digression: Other Pre-defined Globals' %>
+<p>
+  <%= bob_left_span %>
+  <p>There is more pre-defined global variables and constants in Ruby. For example, <code>$$</code> contains the PID of the current process, $0 is a name of the process. There are "last seen" globals, like <code>$!</code> - last exception raised or <code>$~</code> - last match (equivalent to <code>Regexp.last_match</code>).
+    <%= bob_code brush: :ruby do %>
+$$     # current PID
+#=> 98108
+
+$0     # process name
+#=> "irb"
+    <% end %>
+  </p>
+  <%= bob_right_span %>
+  <p>
+    I would recommend to avoid using this globals. Most of them can be replaced by more human-readable construct. The other reason is that in multi-threaded applications using globals may provide confusion: for example, another thread may run external program and overwrite the <code>$0</code> before your read it.
+  </p> 
+  <%= bob_end_spans %> 
+</p>
+
+<%= bob_header 'exec' %>
+<p class='commentable' id='exec'>
+  The <code>Kernel.exec</code> method <strong>replaces</strong> the current process with another one. In the other words, it terminates the current process and runs the other one. Try to run it in IRB:
+  <%= bob_code brush: :ruby do %>
+exec 'ls', '-l', '/etc'  # or Kernel.exec 'ls -l /etc'
+lrwxr-xr-x@ 1 root  wheel  11 Oct 23  2013 /etc -> private/etc
+$ 
+  <% end %>
+</p>
+
+<%= bob_header 'system' %>
+<p class='commentable' id='system'>
+  The <code>Kernel.system</code> command runs the specified program, wait for it to finish and returns <code>true</code> if the command exits with status zero, <code>false</code> when it exit with the other status and <code>nil</code> if the execution fails.
+  <%= bob_code brush: :ruby do %>
+system('sleep 10; pwd')  # wait 10 seconds before 
+/Users/turbo
+#=> true
+  <% end %>
+</p>
+
+<%= bob_header 'spawn' %>
+<p class='commentable' id='spawn'>
+  <code>Kernel.spawn</code> runs specified command in a background. It returns the PID of the process.
+  <%= bob_code brush: :ruby do %>
+spawn('sleep 10; pwd')
+#=> 869                     # pid of the background process
+/Users/turbo            # shows on the console after 10 seconds
+  <% end %>
+</p>
+
+<%= bob_header 'System, exec and spawn Additional Options' %>
+<p class='commentable' id='exec-options'>
+  This three methods described above takes more options than the command name - the full syntax is <code>spawn([env,] command... [,options])</code>. <br>
+  The <code>env</code> is a hash with the environment variable set to this process. Use <code>nil</code> if you want to unset the environment variable. The <code>options</code> hash contains additional flags, like <code>:unsetenv_others</code> to clear up all the environment variables, <code>:umask</code> to set up the command umask or <code>:chdir</code> to start the command in the different directory. <br>
+  See the full description of the options in <code>ri Kernel.spawn</code> documentation.
+  <%= bob_code brush: :ruby do %>
+system({'ORACLE_SID' => 'testdb'}, 'env|grep ORACLE')
+ORACLE_SID=testdb
+ORACLE_HOME=/oracle/ohome/
+#=> true
+
+system({'ORACLE_SID' => 'testdb', 'ORACLE_HOME' => nil}, 'env|grep ORACLE')
+ORACLE_SID=testdb
+#=> true
+
+system({'ORACLE_SID' => 'testdb'}, 'env', unsetenv_others: true)
+ORACLE_SID=testdb
+#=> true
+
+system('umask')  # default system umask
+0022
+#=> true
+system('umask', umask: 0777)  # set it up to octal 0777, then run 'umask'
+0777
+#=> true
+
+system('pwd', chdir: '/')   # run 'pwd' in root
+/
+#=> true
+  <% end %>
+</p>
+<p class='commentable' id='fdescriptors'>
+  By default the command inherits all the I/O descriptors opened by Ruby. Option <code>:close_others => true</code> forces closing all non standard (all except stdout, stdin and stderr) file descriptors. <br>
+  You can redirect <em>std*</em> as well:
+  <%= bob_code brush: :ruby do %>
+spawn('ls /this_will_fail', err: '/dev/null')  # silent error, stderr redirected to /dev/null
+#=> 2042
+
+spawn('sleep 2; date; sleep 2; date', out: '/tmp/test')  # like '> /tmp/test'
+#=> 2095
+  <% end %>
+</p>
+
+
+<%= bob_header 'open' %>
+<p class='commentable' id='open'>
+  From the previous chapters we know how to open a file for reading and writing. The <code>Kernel.open(filename)</code> method is more general than <code>File.open(filename)</code> - when the filename begins with the pipe, it treats the rest of filename as a command to run (otherwise it tries just to open file). It returns <code>IO</code> object, so you can use it just like a normal file: read methods would have an access to the processes <code>stdout</code> and write command to its <code>stdin</code>. <br>
+  Remeber you can read the process <code>stdout</code> only once; there is no way to <code>rewind</code> or set seek position. And it is very important to close this descriptor after use, because in the other case the command will not finish:
+  <%= bob_code brush: :ruby do %>
+f = open('|ls /etc')  # run 'ls /etc' and create IO object for reading
+#=> #&lt;IO:fd 7&gt;
+
+f.readlines           # read just like from the ordinary file
+#=> ["afpovertcp.cfg\n", "aliases\n", "aliases.db\n", ...]
+
+f.rewind              # but no way to rewind
+Errno::ESPIPE: Illegal seek
+
+# 'ls' still exists in a process table
+puts `ps -ef|grep #{Process.pid}`   # Process.pid is a PID of the current process
+  506  3031 99339   0  8:46PM ttys001    0:00.12 irb 
+  506  3056  3031   0  8:46PM ttys001    0:00.00 (ls)
+  506  3092  3031   0  8:48PM ttys001    0:00.01 sh -c ps -ef|grep 3031
+  506  3094  3092   0  8:48PM ttys001    0:00.00 grep 3031
+#=> nil
+
+f.close               # closing the IO object
+#=> nil
+
+# 'ls' finished
+puts `ps -ef|grep #{Process.pid}`
+  506  3031 99339   0  2:46PM ttys001    0:00.13 irb 
+  506  3256  3031   0  2:53PM ttys001    0:00.00 sh -c ps -ef|grep 3031
+  506  3258  3256   0  2:53PM ttys001    0:00.00 grep 3031
+#=> nil
+  <% end %>
+</p>
+
+<%= bob_header 'Open3.popen3' %>
+<p class='commentable' id='popen3'>
+  <code>Kernel.open</code> is useful, but what if we want to read <code>stderr</code> as well as <code>stdout</code> of the process? In this case we can use <code>Open3</code> object. Its method <code>popen3</code> spawns the process in a background and returns a descriptors for <code>stdin</code>, <code>stdout</code> and <code>stderr</code>. <br>
+  Notice that you can control <code>popen3</code> with the same options as <code>Kernel.spawn</code>.
+  <%= bob_code brush: :ruby do %>
+require 'open3'  # must load Open3 object first
+#=> true
+
+sin, sout, serr = Open3.popen3('ls /etc')
+#=> [#&lt;IO:fd 10&gt;, #&lt;IO:fd 12&gt;, #&lt;IO:fd 14&gt;, #&lt;Thread:0x007ff3e42b1440 sleep&gt;]
+sout.readline   # read like from the ordinary file
+#=> "aliases\n"
+sout.readline  
+#=> "aliases.db\n"
+
+sin, sout, serr = Open3.popen3('ls /nonexists/')
+#=> [#&lt;IO:fd 10&gt;, #&lt;IO:fd 12&gt;, #&lt;IO:fd 14&gt;, #&lt;Thread:0x007ff3e588a3c0 sleep&gt;]
+serr.readlines   # reads from sederr
+#=> ["ls: /nonexists/: No such file or directory\n"]
+  <% end %>
+</p>
+
+<%= bob_header 'Open4 or How to Run Sudo Programs in Ruby' %>
+<p class='commentable' id='sudo'>
+  What if we want to run some command with root privilages using sudo? In this case Open3 could be useful, because it is giving an access to the commands <code>stdin</code>. But there is more convinient way to deal with this: <code>open4</code> gem. Install it with <code>gem install open4</code>.
+  <%= bob_code filename: '4.4.sudo.rb' %>
+</p>
+
+<p class='commentable' id='sudo2'>
+  This way is easier beacuse when running in block, <code>popen4</code> spawns the external command synchronously - waiting for it to finish (where <code>popen3</code> runs it at the background). <br>
+  Note we had to use <code>-S</code> switch for <code>sudo</code> to force it to read the password from <code>stdin</code>. By default, sudo reads it directly from the terminal.
+</p>
+

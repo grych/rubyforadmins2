@@ -1,0 +1,269 @@
+<%= bob_header 'Strings' %>
+<p class='commentable' id="string1">
+  String is a data type probably most commonly used by Sysadmins. Most of the scripts are about processing the strings - file names, SQLs, commands output, etc.<br>
+  Exactly the same as in Shell Scripts, the syntax for string is to put it between single or double quote. Double-quoted strings are parsed, so you can put some non-printable characters (like <code>\n</code> for newline or <code>\xnn</code> to put any character which Ascii code is <code>nn</code> hexadecimal). You may use the <em>expression substitution</em> to include any Ruby expression between <code>#{</code> and <code>}</code>. The expression substitution is similar to the <code>$VARIABLE</code> inside double-quoted string in the Shell script - but you can use any Ruby expression, not only the variable!<br>
+  If the evaluated expression does not return the string object, Ruby will look for <code>to_s</code> method. If not found, it will insert the result of calling <code>inspect</code> on the value, so in the worst case you got something like <code>#&lt;Server:0x007fdd9&gt;</code> inside the string.<br>
+  Single-quoted strings are not processed - you can only escape single quote.
+  <%= bob_code brush: :ruby do %>
+puts 'Single \'quoted\' string.\nNo newline parsed.'  # \n is just a backslash and the letter n
+Single 'quoted' string.\nNo newline parsed.
+puts "Double \"quoted\" string.\nWith newline."       # escape double quotes with \"
+Double "quoted" string.
+With newline.
+"2 + 2 = #{ 2 + 2 }"       # Ruby evaluates the expression between #{ and }
+#=> "2 + 2 = 4"    
+            # and puts the value of it inside
+ip = Ip.new(192, 168, 1, 1)
+#=> #&lt;Ip:0x007fdd90820e90 @p1=192, @p2=168, @p3=1, @p4=1&gt;
+"My IP is '#{ip}'"         # it could be any expression which returns string
+#=> "My IP is '192.168.1.1'"   # or have 'to_s' method defined
+  <% end %>
+</p>
+<%= bob_header 'String Formatting' %>
+<p class='commentable' id="formatting1">
+  Another way to put some values inside the Ruby string is to use the <code>%</code> operator. It will construct the new Ruby string with given pattern and arguments. The pattern is similar to <code>printf</code> instruction in Bash, where <code>%s</code> means string, <code>%d</code> - decimal number, <code>%f</code> - floating point number, etc. There is a good description of this format in the documentation: <code>ri Kernel.sprintf</code>.<br>
+  If there is more than one argument, you must use the Array or Hash (for named arguments, which may be handy for bigger expressions). Arrays and Hashes will be described in next chapters, for now just take a look on the examples:
+  <%= bob_code brush: :ruby do %>
+"The answer is %d" % 42     # simple substitution of the number
+#=> "The answer is 42"
+
+"The highest address in 8-bit Atari is %X" % 65535   # convert to hex
+#=> "The highest address in 8-bit Atari is FFFF"         # %x would give the lowercase characters
+
+"%d/%d equals to %.3f" % [5, 3, 5.0/3]   # more than one arguments - in Array
+#=> "5/3 equals to 1.667"                    # note the 5/3 is rounded
+
+"The answer for %&lt;question&gt;s is %&lt;answer&gt;d." % { question: 'everything', answer: 42 }
+#=> "The answer for everything is 42."
+  <% end %>  
+</p>
+<p class='commentable' id="sprintf">
+  The similar to <code>%</code> operator is the <code>sprinf</code> function. It returns string formatted with the pattern and attributes. There is a <code>prinf</code> method as well, but not widely used - most Rubyists prefer <code>puts</code>. In <code>sprintf</code> and <code>printf</code>, unlike in the <code>%</code> operator, you don't have to use Array to pass more than one arguments.
+  <%= bob_code brush: :ruby do %>
+s = sprintf('42 in binary: %08B', 42)  # 08 - put leading zeros to fill 8 characters
+#=> "42 in binary: 00101010"
+printf("42 = %8B\n84 = %8B\n", 42, 84)
+42 =   101010
+84 =  1010100
+  <% end %>  
+</p>
+<%= bob_header 'Substrings' %>
+<p class='commentable' id="substr">
+  To get specified character or characters from the string, use the substring operator <code>[]</code>. This operator works on the given string, gets the integer number - the position of the character in the string, starting from zero (zero means the first character). You can pass a range of integers as well - in this case it will return the substring from/to given numbers. And finally, giving the negative integers, counts from the end: -1 means the last character, -2 second last, etc.<br>
+  In the similar way you can replace the substring in the string - with <code>[]=</code> method: it works on single characters and on ranges.
+  <%= bob_code brush: :ruby do %>
+s = "The ultimate answer"
+#=> "The ultimate answer"
+s[0]        # the first character
+#=> "T"
+
+s[4]         # the fifth character - counting from zero
+#=> "u"
+
+s[-1]        # the last one
+#=> "r"
+
+s[0..2]      # the range from the first to third
+#=> "The"
+
+s[4..11]     # from 5 to 12
+#=> "ultimate"
+
+s[-6..-1]    # from 6th from the end to the last one
+#=> "answer"
+
+s[4..11] = 'only true'   # replace the characters from 5 to twelve with a new substring
+#=> "only true"              # note this substitution returns the value on substring, not 's'
+
+s                        # string 's' is now modified
+#=> "The only true answer"
+  <% end %>  
+</p>
+<%= bob_header 'More String Operators' %>
+<p class='commentable' id="more-operators">
+  There is a number of operators on strings, most of them works as you exprected, for example <code>>=</code> checks if the string on the left is greater or equal to the one on the right side (of course it is a comparition in the Ascii way: both strings are compared character by character). Plus <code>+</code> operator contatenates the strings and returns the value of this operation as a new string, and <code>&lt;&lt;</code> operator concatenates the right string to the left one, modifying the content of it.
+  Finally, the star operator is used to multiple string.
+  <%= bob_code brush: :ruby do %>
+'abc' >= 'abb'     # it is greater, because 'c' is greater than 'b' on the third position
+#=> true
+
+'foo' &lt; 'fooz'     # the same beginnig, but 'fooz' is longer and wins
+#=> true
+
+s = 'foo'          # creating object 'foo' to play with
+#=> "foo"
+s + "bar"          # concatenation s with 'bar' produces 'foobar'
+#=> "foobar"
+
+s                  # but leaves the object untouched
+#=> "foo"
+
+s &lt;&lt; "bar"         # and this operator will add 'foo' to the object 's'
+#=> "foobar"
+s                  # modified content of the object s
+#=> "foobar"
+
+"0123456789" * 8   # multiple the string 8 times
+#=> "01234567890123456789012345678901234567890123456789012345678901234567890123456789"
+  <% end %>  
+</p>
+<%= bob_header 'String Methods' %>
+<%= bob_left_span %>
+<p>
+  Ruby provides a bunch of string maniputation methods (see <code>ri String</code> for the whole list) and it is time to get familiar with another method naming convention: the method, which name ends with question mark, are the questions and should return true or false; method ends with exclamation usually are modifying the content of the object on which they are called (you may think about it as a warning: something will change!). All other functions normally are not changing the existing objects, but constructing the new ones.
+</p>
+<%= bob_right_span %>
+  <p>
+    <em>
+      Remember that this naming is only a convention and there are methods to modify objects not finishing with exclamation.
+    </em>
+  </p>
+<%= bob_end_spans %>
+
+<p class='commentable' id="methods">
+  Here are the most interesting String methods. Notice that many of them are provided with two variants - returning new objects or modifying existing one.
+  <ul class='circle'>
+    <li><code>length</code> - returns integer with string size (number of characters, not bytes - it may not to be the same for non-ascii strings, like UTF-8</li>
+    <li><code>bytesize</code> - the size of the string, in bytes</li>
+    <li><code>chomp, chomp!</code> - drops newlines and carriage returns at the end of the string</li>
+    <li><code>chop, chop!</code> - removes the last character</li>
+    <li><code>crypt(salt)</code> - creates one-way cryptographic hash (like encoded password in /etc/passwd) with the given salt</li>
+    <li><code>downcase, downcase!</code> - downcase the content of the string</li>
+    <li><code>upcase, upcase!</code> - converts the string to uppercase</li>
+    <li><code>empty?</code> - returns true, if the string has zero length</li>
+    <li><code>include?(other_string)</code> - true, if the string includes the other one</li>
+    <li><code>index(other_string)</code> - returns the index of first occurence of the other one or <code>nil</code> if not found</li>
+    <li><code>rindex(other_string)</code> - the index of last occurence, or <code>nil</code></li>
+    <li><code>insert(index, other_string)</code> - inserts other_string at the specified index (<em>note this method modifies the content of the string and it is not finished by exclamation: this is because its name cleary idicates, that the string will be changed</em>)</li>
+    <li><code>lstrip, lstrip!</code> - removes leading whitespaces (spaces, tabs)</li>
+    <li><code>rstrip, rstrip!</code> - trailing whitespaces to be removed</li>
+    <li><code>strip, strip!</code> - deletes whitespaces from both left and right side</li>
+    <li><code>reverse, reverse!</code> - reverse the string</li>
+    <li><code>split(delimiter)</code> - divides the string to a substrings, based on delimiter (like <code>awk -F'delimiter'</code>)</li>
+    <li><code>tr(from, to), tr!(from_characters, to_string)</code> - just like Unix <code>tr</code> command, changes all characters in the first argument to the string given in the second argument</li>
+  </ul>
+</p>
+
+<p>
+  <%= bob_code brush: :ruby do %>
+s = "200\u20ac"  # '\u' is an escape Unicode characters in Ruby strings: \uXXXX, where XXXX is hex code for the character
+#=> "200\u20AC"      # 20AC (hex) is an euro sign (€) in Unicode
+puts s           # puts does not escape the non-ascii characters
+200€                
+s.length         # '200€' is 4-characters string
+#=> 4
+s.bytesize       # but in memory occupies 6 bytes
+#=> 6
+
+s = "Hello world.\r\n" # CRLF at the end of the string
+#=> "Hello world.\r\n"
+s.chomp                # chomp removes CR and LF, creates a new string object and returns it
+#=> "Hello world."
+s                      # but the variable 's' remains untouched
+#=> "Hello world.\r\n"
+s.chomp!               # chomp! removes CRLF from existing object
+#=> "Hello world."
+s                      # variable 's' has been modified
+#=> "Hello world."
+
+'secret'.crypt('salt') # creates one-way hash for the string 'secret' (similar way how /etc/passwd keeps the hashes)
+#=> "saHW9GdxihkGQ"
+
+'small'.upcase  # uppercase the string, method upcase! would modify the object itself
+#=> "SMALL"
+'Big'.downcase  # lowecase the string 'Big'
+#=> "big"
+
+"".empty?       # only "" is an empty string
+#=> true
+
+"Hello world".include? "Hell"          # search for a substring 'Hell'
+#=> true
+"Hello world".include? "hell"          # all functions are case-sensitive
+#=> false
+"Hello world".downcase.include? "hell" # to do a case-insensitive search, just lowecase the object first
+#=> true                                   # so the method 'include?' will search on the lowecased object
+
+"Hello world".index 'o'    # first occurence of 'o' is on 4th, counting from zero, position
+#=> 4
+"Hello world".rindex 'o'   # last occurence of 'o' is on 7th, counting from zero
+#=> 7
+
+"Hello world".insert(5, ' cruel')  # inserts substring into 5th position (from zero)
+#=> "Hello cruel world"
+
+" Hello  \n".lstrip   # removes whitespaces from the left
+#=> "Hello  \n"
+" Hello  \n".rstrip   # all trailing whitespaces, including newline, to be removed
+#=> " Hello"
+" Hello  \n".strip    # remove both from the beginning and from the end
+#=> "Hello"
+
+"kayak ".reverse      # create new string by reversing the given object
+#=> " kayak"
+
+"Jun 17 02:47:59 joe kernel[0]".split         # splits the string with default delimiter (whitespace)
+#=> ["Jun", "17", "02:47:59", "joe", "kernel[0]"]
+"02:47:59".split(":")                         # and with given delimiter
+#=> ["02", "47", "59"]
+
+'Hello world'.tr 'aeiouy', '*'  # change any of chars: 'aeiouy' with star
+#=> "H*ll* w*rld"
+'Hello world'.tr 'a-z', '*'     # change all lowercase letters to stars
+#=> "H**** *****"
+  <% end %>  
+</p>
+
+<p class='commentable' id="many-more-methods">
+  There are many more string processing methods, but most of them are base on Ruby Regular Expressions. Because this is quite big and complicated topic, we are going to elaborate it later, in <%=bob_link_to_chapter 'Regular Expressions', 'a separate chapter' %>. 
+</p>
+
+<%= bob_header 'Instances and Reference' %>
+<p class='commentable' id="instance">
+  Strings, like everything in Ruby, are objects, but it is important to understand that even the same literals are not the same object instances:
+  <%= bob_code brush: :ruby do %>
+'string'.object_id     # construct the first 'string' object
+#=> 70281130395700
+
+'string'.object_id     # the second one, different than the previous one
+#=> 70281130382560
+
+'string'.object_id == 'string'.object_id   # there are the different objects
+#=> false
+
+'string' == 'string'   # but comparition works as expected
+#=> true
+  <%  end %>
+</p>
+<p class='commentable' id="reerence">
+  It is worth to make a note about the reference. In Ruby, variables contains references to the object, not the objects themselves. Thus, while assigning one variable to other, only the reference is copied. In the example below both variables refers to the same object in the memory. 
+  <%= bob_code brush: :ruby do %>
+a = 'string'                 # a is the reference to object 'string'
+#=> "string"
+
+b = a                        # b is the reference to the same object 'string'
+#=> "string"
+
+a.object_id == b.object_id   # true, because a and b referes to the same object, 
+#=> true
+  <%  end %>
+</p>
+
+<%= bob_header 'Symbols' %>
+<p class='commentable' id="Symbols">
+  Symbols are immutable strings (so the kind of strong which can not be changed). Symbols are commonly used to describe method and variable names. You may think about it as some kind of <em>constant string</em>. Syntax for symbol is the colon followed by the symbol itself, like <code>:symbol</code>. If you want to have whitespaces inside the symbol, use apostrophes: <code>:'the symbol'</code>, but the symbols with spaces are not in a common use.<br>
+  Unlike strings, symbols are created in memory only once, so every symbol with the same name refers to the same object. This is a main advantage of the symbols compared to strings - the operations on them are much faster than on character strings. For example, to check the equality of two strings Ruby must iterate and check them character by character. The same operation of <code>Symbol</code> object requires only comparition of object identifiers (memory address).
+  <%= bob_code brush: :ruby do %>
+s1 = :the_symbol               # s1 is the reference to object :the_symbol
+#=> :the_symbol
+
+s2 = :the_symbol               # s2 is, unlike the String, the same object
+#=> :the_symbol
+
+s1.object_id                   # both s1 and s2 refers the same object in the memory
+#=> 527848
+
+s2.object_id                   # the same object identifier as s1
+#=> 527848
+  <%  end %>
+</p>

@@ -1,0 +1,78 @@
+<%= bob_header 'For Loop' %>
+<p class='commentable' id="for-loop">
+  The <em>for loop</em> in Ruby looks almost like the same loop in the Shell. The syntax looks familiar:
+  <%= bob_code brush: :ruby do %>
+for variable in enumerable [do]
+  statements
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="for-loop-next">
+  Keyword <code>do</code> is optional if there is a newline after enumerable, use it only for one-liners.<br>
+  The <code>enumerable</code> is any expression which return object of class <code>Enumerable</code>. Enumerables are arrays, hashes, ranges, and you can even make your own enumerable object: we will describe it <%=bob_link_to_chapter 'Enumerable Mixin', 'later' %>. 
+  <%= bob_code brush: :ruby do %>
+for i in 1..10                              # iterations on Range
+  for j in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]  # and on Array
+    puts "#{i} * #{j} = #{i*j}"
+  end
+end
+
+http_codes = {not_found: 404, ok: 200}      # iterations on Hash
+for key, value in http_codes
+  puts "Code for #{key} is #{value}"
+end
+  <%  end %>
+</p>
+
+<%= bob_header 'While Loop' %>
+<p class='commentable' id="while-loop">
+  <em>While loop</em> is for running the block of code while some expression evaluates to true. Syntax:
+  <%= bob_code brush: :ruby do %>
+while expression [do]
+  statements
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="while-next">
+  As you probably guess, keyword <code>do</code> is optional and must be used only when you write your loop in one line.<br>
+  You can use while loop as a modifier, just like <em>if</em>, after the statement. This is handy if you have only one statement to repeat.
+  Both example below will add spaces to the end of the string until its length reaches 10.
+  <%= bob_code brush: :ruby do %>
+str = 'hello'
+while str.length < 10     # this loop will repeat while length of the string is less than 10
+  puts "Still increasing"
+  str << " "              # add space at the end of the string
+end
+
+str = 'hello'
+str << " " while str.length < 10  # while loop as a modifier
+  <%  end %>
+</p>
+
+<%= bob_header 'Until Loop' %>
+<p class='commentable' id="until">
+  Until statement creates the loop, which repeats while condition is <em>false</em>. This is a kind opposite to while loop, but the syntax is the similar:
+  <%= bob_code brush: :ruby do %>
+until expression do
+  statements
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="unlil-one-line">
+  Like the other statements it is possible to use until loop as a modifier, in one line statements. 
+  <%= bob_code brush: :ruby do %>
+str = 'hello'
+until str.length == 10     # this loop will repeat until the length of the string reaches 10
+  puts "Still increasing"
+  str << " "               # add space at the end of the string
+end
+
+str = 'hello'
+str << " " until str.length == 10  # until loop as a modifier
+  <%  end %>
+</p>
+
+

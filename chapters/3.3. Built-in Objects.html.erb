@@ -1,0 +1,89 @@
+<%= bob_header 'Ruby Type System' %>
+<p class='commentable' id="types">
+  Ruby is a <strong>dynamically typed</strong> and <strong>interpreted</strong> language. That means that the program is not compiled before the execution to any type of bytecode, and there is no type checking before execution. This may provide to some problems which does not exists in static typed programming languages, but also provides the real freedom for the developer.<br>
+  Because the variable type is not defined statically and it can change while the program is running, Ruby provides a bunch of methods to determine the class of the instance. Every object has build-in <code>class</code> method, which returns the constant of class name (not a string!). You can check if the object is instance of the given class by running <code>instance_of?(class)</code> method. There is also a function <code>is_a?(class)</code> on every instance, returns true if the <code>class</code> is the class or any of superclass of the given object. The difference between <code>instance_of?</code> and <code>is_a?</code> is that <code>is_a?</code> is checking all superclasses of the variable.<br>
+  Lets see this on example <code>Server</code> class from previous chapter:
+  <%= bob_code brush: :ruby do %>
+win = WindowsServer.new('kirk', '.starfleet.com')  # WindowsServer is a subclass of Server
+#=>* WindowsServer: kirk.starfleet.com *
+unix = UnixServer.new('yoda', '.rebelians.org')    # UnixServer is a subclass of Server as well
+#=>* UnixServer: yoda.rebelians.org *
+win.class                # class of the win variable is WindowsServer
+#=>WindowsServer
+win.is_a? WindowsServer  # win is a WindowsServer
+#=>true
+win.is_a? Server         # win is a Server as well, because Server is a superclass of WindowsServer
+#=>true
+win.is_a? UnixServer     # but is is not an UnixServer
+#=>false
+win.instance_of? WindowsServer  # win is an instance of WindowsServer class
+#=>true
+win.instance_of? Server         # but not the instance of Server (instance_of? is not checking superclasses)
+#=>false
+  <% end %>
+</p>
+<p class='commentable' id="triple-equal-sign">
+  <code>is_a?</code> method may be replaced by triple equal sign <code>===</code> operator, called <em>case equality operator</em>. The left operand is a class, the right one is an instance. It works like <code>is_a?</code> - checking superclasses as well.
+  <%= bob_code brush: :ruby do %>
+WindowsServer === win
+#=>true
+Server === win
+#=>true
+  <% end %>
+</p>
+<%= bob_header 'Type Conversion' %>
+<p class='commentable' id="type-converion">
+  Unlike the other languages there is no explicit type conversion system in Ruby. With your own class you may provide methods which converts your object to other classes, if it makes sense. You may call this methods whatever you want, but it is a good practice to use Ruby convention. Thus, to convert object to integer, use <code>to_i</code> method, <code>to_s</code> - to string, <code>to_a</code> - to array, etc.<br>
+  Let's see it in example. Consider you want to create an object to keep the IP numbers (you can store it in string or in number, but here is a bit more sophisticated version).
+  <%= bob_code brush: :ruby do %>
+class Ip
+  def initialize(p1, p2, p3, p4)
+    @p1 = p1; @p2 = p2; @p3 = p3; @p4 = p4
+  end
+end
+ip = Ip.new(192,168,1,10)
+#=>#&lt;Ip:0x007faf2b0f78a0 @p1=192, @p2=168, @p3=1, @p4=10&gt;
+  <% end %>
+</p>
+<p class='commentable' id="ip-to-string">
+  It is a quite natural to convert the ip to string, giving it human readable, well-known format:
+  <%= bob_code brush: :ruby do %>
+class Ip
+  def to_s
+    @p1.to_s + "." + @p2.to_s + "." + @p3.to_s + "." + @p4.to_s
+  end
+end
+ip.to_s
+#=>"192.168.1.10"
+  <% end %>
+</p>
+<p class='commentable' id="ip-to-integer">
+  Or even convert it to the 32-bit number:
+  <%= bob_code brush: :ruby do %>
+class Ip
+  def to_i
+    256*256*256*@p1 + 256*256*@p2 + 256*@p3 + @p4
+  end
+end
+ip.to_i
+#=>3232235786
+  <% end %>
+</p>
+<p class='commentable' id="ip-to-bin-and-hex">
+  Or represent it as binary or hexadecimal. Notice that <code>to_s</code> method on number object may take an argument - the base, so to convert to binary, use <code>to_s(2)</code>, to convert to hex - <code>to_s(16)</code>. It is working in the other way as well - to convert "ff" string to integer, add a base to <code>to_i</code> method: <code>"ff".to_i(16)</code>.
+  <%= bob_code brush: :ruby do %>
+class Ip
+  def to_bin
+    to_i.to_s(2)
+  end
+  def to_hex
+    to_i.to_s(16)
+  end
+end
+ip.to_bin
+#=>"11000000101010000000000100001010"
+ip.to_hex
+#=>"c0a8010a"
+  <% end %>
+</p>
+

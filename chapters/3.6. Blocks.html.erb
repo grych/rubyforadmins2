@@ -1,0 +1,128 @@
+<%= bob_header 'Blocks' %>
+<p class="commentable" id="block_syntax_1">
+  Blocks are the the chunks of code which you can pass to the method as a kind of its argument. The method can run the block (in Ruby it is called <em>yield</em>) and do something with the result of this evaluation. This way gives you a power to build very flexible programs!<br>
+  To have an overview on the concept, let's start with the example - there is a method called <code>select</code> which takes a block as an argument. This method applies to the objects which are <code>Enumerable</code> (you can go through elements of the object, one by one), so Arrays, Hashes, Ranges. The <code>select</code> function processes the object elements one by one, evaluates the block with every element, and if the value of this evaluation is <em>true</em>, adds this element to the output value. Therefore, it selects all the elements of the object, on which block expression gives <em>true</em>.
+  <%= bob_code brush: :ruby do %>
+(1..10).select { |x| x.odd? }   # 'odd?' on Fixnum returns true, if the number is odd
+#=> [1, 3, 5, 7, 9]                 # output: the array of odd numbers
+  <%  end %>
+</p>
+<p class='circle commentable' id="block_syntax_2">
+  In the example above we run the method <code>select</code> on range 1..10. The method is not getting any arguments except the block - the portion of code between the curly braces: <code>{ |x| x.odd? }</code>. This function iterates for every element of the object (so in the example all the numbers between 1 and 10) and evaluates the given block, passing the element as variable <code>x</code>. If the block evaluates to <em>true</em>, element is included in the result array.<br>
+  It is quite important to understand Ruby blocks, so lets describe it even deeper, step by step: 
+<ul>
+  <li> <code>select</code> gets the first element in range 1..10 - the number 1</li>
+  <li> it is passing this element to the block: <code>|x| x.odd?</code> </li>
+  <li> in the block, the value of the element (number 1) is assigned to variable <code>x</code>  </li>
+  <li> <code>1.odd?</code> evaluates to true, so number 1 is included to the result </li>
+  <li> the same continues to the next numbers </li>
+</ul>
+</p>
+<p class="commentable" id="block_syntax_3">
+  Curly brackets are not the only syntax of the blocks: the other one is <code>do ... end</code> statement. The code below selects only even numbers bigger than 5:
+  <%= bob_code brush: :ruby do %>
+(1..10).select do |x|
+  puts "Checking number #{x}..."
+  x.even? && x > 5                 # number is even and greater than 5
+end
+Checking number 1...
+Checking number 2...
+Checking number 3...
+Checking number 4...
+Checking number 5...
+Checking number 6...
+Checking number 7...
+Checking number 8...
+Checking number 9...
+Checking number 10...
+#=> [6, 8, 10]
+  <%  end %>
+</p>
+
+<p  class='commentable' id="block_syntax_4">
+  By convention, curly brackets are used when the whole block is in one line, and <code>do ... end</code>, when it is longer than one line.<br>
+  Notice that the return value of multiple line expression it the value from the last line - so we can put anything before checking <code>x.even? && x > 5</code> and it will still work correctly. But I will not work in opposite way:
+  <%= bob_code brush: :ruby do %>
+(1..10).select do |x|
+  x.even? && x > 5      
+  puts "Checking number #{x}..."  # will evaluate to false, becaus puts returns always nil
+end
+Checking number 1...
+Checking number 2...
+Checking number 3...
+Checking number 4...
+Checking number 5...
+Checking number 6...
+Checking number 7...
+Checking number 8...
+Checking number 9...
+Checking number 10...
+#=> []                   # the empty array
+  <%  end %>
+</p>
+
+<%= bob_header 'Yield' %>
+<p  class='commentable' id="block_syntax_yield">
+  You can pass the block to any method you want. The block will be evaluated only when the method code contains <code>yield</code> keyword (if there is no yield, nothing happens - the block will be ignored). The simplest example below is to run the block of code twice:
+  <%= bob_code brush: :ruby do %>
+def run_twice
+  yield
+  yield
+end
+run_twice { puts "- hello" }
+- hello
+- hello
+  <%  end %>
+</p>
+
+<p class='commentable' id="block_syntax_yield2">
+  <code>yield</code> can take the arguments, which will be passed to the code block as a local block variables (the ones inside the pipe signs, like <code>|x|</code>). You can pass multiple arguments. <code>yield</code> returns the value evaluated on the code block. <br>
+  Lets create more complicated example. We know the method <code>select</code> on some iterable objects, but it is missing on the String class. You can imagine how should this method work: it treats the string as the collection of characters and applies the block to every single character of the string, returning only this, on which block evaluated to <em>true</em>. Notice that there are few simpler ways to do it in Ruby, but for now let's do it our way:
+  <%= bob_code brush: :ruby, highlight_lines: [3, 7] do %>
+class String                                 # extendig the String class
+  def select                                 # adding the missing 'select' method
+    if block_given?                          # block_given? returns true only when block is passed
+      out = ""                               # this empty string is the buffor for the characters to return
+      for i in 0...self.length               # loop on every character in the string (self is this string)
+        character = self[i]
+        out &lt;&lt; character if yield(character) # adding character to output string only if block returns true
+      end
+      out                                    # return the output string
+    else
+      self
+    end
+  end
+end
+
+"Hello World.".select { |ch| ch != ch.upcase }
+#=> "elloorld"
+
+"Hello World.".select
+#=> "Hello World."
+  <%  end %>
+</p>
+
+<p class='commentable' id="block_syntax_yield3">
+  The interesting part comes in third line - <code>block_given?</code> is a function returning true when the block is passed to the method. We want our method to return the same string if the block is not given. So, if no block is passed to the method, it returns <code>self</code> (line 11). Otherwise there is a loop on every character of the string and inside this loop we add the given character to the output buffer (<code>out << character</code>) only when evaluated value of the block with the character as an argument evaluates to <em>true</em>.<br>
+  Line 16 shows the usage example. We are passing the block <code>|ch| ch != ch.upcase</code> to the method <code>select</code> on String object "Hello World.". The loop inside the method takes all the characters one by one and checks if the block code returns true: on the first step it takes the letter 'H', checks the result of expression <code>'H' != 'H'.upcase</code> - false, then take the next letter 'e' - for this letter <code>'e' != 'e'.upcase</code> gives true, etc. After the loop, method returns the output buffer.<br>
+  You can put everything you want to the block of code. The next example will output only the uppercase characters from the string (by checking if the character is withing the range 'A'..'Z'), but with some additional debugging output:
+  <%= bob_code brush: :ruby do %>
+"Hello World.".select do |ch|
+  puts "Processing letter '#{ch}'"
+  ('A'..'Z') === ch
+end
+Processing letter 'H'
+Processing letter 'e'
+Processing letter 'l'
+Processing letter 'l'
+Processing letter 'o'
+Processing letter ' '
+Processing letter 'W'
+Processing letter 'o'
+Processing letter 'r'
+Processing letter 'l'
+Processing letter 'd'
+Processing letter '.'
+#=> "HW"
+  <%  end %>
+</p>

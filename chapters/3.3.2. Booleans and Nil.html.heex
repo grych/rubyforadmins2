@@ -1,0 +1,53 @@
+<%= bob_header 'Booleans' %>
+<p>
+  <%= bob_left_span %>
+  <p><code>true</code> and <code>false</code> are pre-definded objects in Ruby. They are the singleton objects of <code>TrueClass</code>and <code>FalseClass</code>. <code>true</code> and <code>false</code> are used as the return value of a Boolean expressions constructed with operators <code>||</code> (logical OR), <code>&&</code> (logical AND) and <code>!</code> (logical NOT), or a value of comparision methods or operators like <code>== > >= </code></p>
+  <%= bob_right_span %>
+  <p><em><u>Singleton</u> is an object which instance could be create only once. <code>true</code> and <code>false</code> are created by Ruby and exists always while running the program. Because they are singletons, every keyword <code>true</code> in the whole program means the same physical object in the memory. You can check it by launching <code>true.object_id</code></em></p>
+  <%= bob_end_spans %>
+  <%= bob_code brush: :ruby do %>
+true || false        # true OR false
+#=> true
+true && false        # true AND false
+#=> false
+!true                # NOT true
+#=> false
+2 > 1.0
+#=> true
+3 == 3
+#=> true
+2 > 1.0 && 3 == 3    # first to evaluate comparitions (> and ==), 
+#=> true                 # and then do a logical AND with results of comparitions
+  <% end %>
+</p>
+<p class='commentable' id="bool"></p>
+<%= bob_header 'Nil' %>
+<p class='commentable' id="nil">
+  <code>nil</code> is a way to describe nothing. In Ruby, <code>nil</code> is an object like everything. It is a singleton instance of <code>NilClass</code>. It is commonly used to return the information that something does not exists, or can not be found. For example, searching for the files on the filesytem may return the list of the file or <code>nil</code> in case when no files were found.<br>
+  In a Boolean expression, <code>nil</code> behaves the same as <code>false</code>:
+  <%= bob_code brush: :ruby do %>
+!nil           # NOT nil is true
+#=> true
+nil && true    # nil AND true is nil
+#=> nil 
+nil && false   # nil AND false is nil
+#=> nil
+nil || true    # nil OR true is true
+#=> true
+nil || false   # nil OR false is false
+#=> false
+  <% end %>
+<p>
+  There is a method called <code>nil?</code> to check if the object is the <code>nil</code>. Obviously only <code>nil</code> returns <code>true</code> from this method:
+  <%= bob_code brush: :ruby do %>
+nil.nil?     # nil is nil
+#=> true
+0.nil?       # zero is not nil
+#=> false
+false.nil?   # and false is not nil as well
+#=> false
+  <%  end %>
+</p>
+<p class='commentable' id="evaluation-to-bool">
+  Such behaviour is very important in Ruby world. <strong>In all the conditional expressions (if-than-else, while, select-case) everything evaluates to <code>true</code>, except <code>false</code> and <code>nil</code></strong>. Unlike in the other languages, zero, empty string, empty array evaluates to <code>true</code>.
+</p>

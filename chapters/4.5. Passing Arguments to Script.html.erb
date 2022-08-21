@@ -1,0 +1,111 @@
+<%= bob_header 'ARGV' %>
+<p class='commentable' id='argv'>
+  We already know <code>ARGV</code> from the previous chapters: it is an Array with all the arguments as strings. The rules are exactly the same as in the shell scripting, for example a string with the space must be between apostrophe.
+  <%= bob_code brush: :shell do %>
+$ ruby -e 'ARGV.each {|x| puts "#{x}, #{x.class}"}' 1 text 'with space'
+1, String
+text, String
+with space, String
+  <% end %>
+</p>
+
+<%= bob_header 'ARGF' %>
+<p class='commentable' id='argf'>
+  It is very common to pass the file names as the script arguments. <code>ARGF</code> provides very handy shortcut for such scripts - it is an I/O stream with the contents of all files passed in arguments. You can use it as a normal file object, so <code>read</code>, <code>readline</code> etc. It is important to remember that <code>ARGF</code> combines all the names given as atributes; for example, giving the same file twice would will cause double output:
+  <%= bob_code brush: :shell do %>
+$ ruby -e 'puts ARGF.readlines' hello_world.rb hello_world.rb 
+#!/usr/bin/env ruby
+puts "Hello, " + ARGV.first + "."
+
+#!/usr/bin/env ruby
+puts "Hello, " + ARGV.first + "."
+  <% end %>
+</p>
+
+<p class='commentable' id='argf-stdin'>
+  If there is no arguments given, <code>ARGF</code> is an I/O stream reading from the <code>stdin</code>. It is quite useful when you are writing a small script, and you want to allow user to decide if to pass a file name or to pass something to the scripts <code>stdin</code>.
+  <%= bob_code brush: :shell do %>
+$ echo "here be dragons" | ruby -e 'puts ARGF.read'
+here be dragons
+  <% end %>
+</p>
+
+<p class='commentable' id='argf-shift'>
+  What about if we do not want to pass only the files to the script (some switches like <code>-rf</code>)? It is good to know, that <code>ARGF</code> reads all the files which are not in the <code>ARGV</code> array. So, for all non-file arguments, just remove them from the array. <br>
+  Another interesting property of <code>ARGF</code> is that it removes the file names from the <code>ARGV</code> after read it. <br>
+  The script below is a small utility to count number of lines in a given files. When the first argument begins with a dash, it is removed from the <code>ARGV</code> array using <code>Array.shift</code> method. Then the scripts outputs the number of lines in all files combined.
+  <%= bob_code brush: :ruby do %>
+#!/usr/bin/env ruby
+unless ARGV.empty?
+  if ARGV.first.start_with?("-")
+    case ARGV.shift  # shift takes the first argument and removes it from the array
+    when '-v', '--verbose'
+      verbose = true
+    when '--version'
+      puts "1.0"
+      exit 0         # exit script with status 0 (all OK)
+    end
+  end
+end
+if verbose
+  puts "Files #{ARGV.join(', ')} contains #{ARGF.readlines.count} lines."
+else
+  puts "#{ARGF.readlines.count}"
+end
+  <% end %>
+</p>
+
+<p class='commentable' id=''>
+  Even being so simple, the script above is quite universal. It takes the files as an arguments or - if no arguments given - counts the number of lines in <code>stdin</code>:
+  <%= bob_code brush: :shell do %>
+$ ./wc.rb /etc/hosts /etc/passwd
+236
+
+$ ./wc.rb --verbose /etc/hosts /etc/passwd
+Files /etc/hosts, /etc/passwd contains 236 lines.
+
+$ cat /etc/passwd | ./wc.rb --verbose
+Files  contains 86 lines.
+  <% end %>
+</p>
+
+<%= bob_header 'OptionParser class' %>
+<p class='commentable' id='optparse'>
+  Parsing the arguments can be tricky and complex issue, especially with the big, complicated scripts. But, as usual, there is a helper class for such operations, it is called <code>OptionParser</code>. It allows to build standard Unix interface to command line scripts:
+  <%= bob_code filename: '4.5.wc.rb' %>
+</p>
+
+<p class='commentable' id='optparse2'>
+  Script equipped with <code>OptionParse</code> shows the <code>banner</code>, <code>separator</code> and the short description of every option when running with <code>--help</code> or <code>-h</code> switch. Parser <code>on(short, long, description) {block}</code> method is used to define the switches and options. It passes the value of the option to the block; in the example above we have only switches (true/false), but you can pass the strings to the options by using <code>--option STRING</code> syntax in the second argument:
+  <%= bob_code brush: :ruby do %>
+opts.on("-f", "--file FILE", "File to process") do |f|
+    options[:file] = f   # f becames a filename given after -f or --file
+end  
+  <% end %>
+</p>
+
+<p class='commentable' id='optparse3'>
+  There is more interesting options to construct switches: you can pass the list of arguments, define the argument type (other than default String). Please refer to the documentation: <code>ri OptionParser</code>. <br> Let's now take a look how the OptionParser works:
+  <%= bob_code brush: :shell do %>
+$ ./wc.rb --help                                             
+Usage: wc.rb [options] [files]
+Reads number of bytes or lines in the files
+Options:
+    -v, --verbose                    Verbose mode
+    -l, --lines                      Count number of lines
+
+$ ./wc.rb /etc/passwd /etc/hosts
+9026 bytes
+
+$ ./wc.rb -l /etc/passwd /etc/hosts
+236 lines
+
+$ ./wc.rb --lines --verbose /etc/passwd /etc/hosts
+Files /etc/passwd, /etc/hosts contains 236 lines.
+
+$ ./wc.rb -lv /etc/passwd /etc/hosts 
+Files /etc/passwd, /etc/hosts contains 236 lines.
+  <% end %>
+</p>
+
+

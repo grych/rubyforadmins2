@@ -1,0 +1,115 @@
+<%= bob_header 'Program Flow' %>
+<p class='commentable' id="hello1">
+  Ruby is quite similar to the other general-purpose programming languages and not so far from the Shell scripts: the interpreter reads the program from the top, evaluates each expression and stores the values in the variables. The script below will print the famous phase "Hello, world.". <code>print</code> is the command to print to the stdout, but unlike <code>puts</code> it is not adding newline at the end.
+  <%= bob_code filename: '3.1.hello_world.rb' %>
+</p>
+<p class='commentable' id="hello2">
+  More than one expression can be written in one line - in this case you must put the semicolon <code>;</code> between them. The good practice is to avoid it for readability, but this could be useful in one-liners, like <code>ruby -e 'print "Hello, "; puts "world."'</code>. The script below is the same as the previous one. 
+  <%= bob_code filename: '3.1.hello_world_inline.rb' %>
+</p>
+<p class='commentable' id="continuation">
+  Ruby treats end of the line as the end of the expression, except there is an operator (like + or -), colon or backslash at the end of the line. In this case the next line is a continuation of the previous statement. When you define a string using single or double quotes, interpreter treats the newline as a part of the string, until the closing quote.
+  <%= bob_code filename: '3.1.continuation_1.rb' %>
+</p>
+<%= bob_header 'Comments' %>
+<p class='commentable' id="commentary">
+  Everything begins with hash # to the end of the line is treated as a comment and it is not evaluated. There are multi-line comments  as well - everything between lines <code>=begin</code> and <code>=end</code> is not evaluated by the interpreter.
+  <%= bob_code filename: '3.1.comments.rb' %>
+</p>
+<%= bob_header 'Variables and Constants' %>
+  <%= bob_left_span %>
+    <p>
+      The local variable starts with a small letter and may contain letters, digits and underscore <code>_</code> sign. The good practice is to use <em>snake case</em> instead of <em>camel case</em> to name the variables, but it is just a convention.<br>
+      <%= bob_code filename: '3.1.variables.rb' %>
+    </p>   
+    <p>
+      The global variable must start with dollar symbol <code>$</code>, then lowercased variable name. The scope of this variables is global, so they can be used anywhere in your script (in opposite to local variables, which lives only within the given function).
+      <%= bob_code brush: :ruby do %>
+$hello = 'hello'
+$world = 'world'
+puts $hello + ' ' + $world
+      <% end %>
+    </p>   
+  <%= bob_right_span %>
+    <p>
+      <em>
+        <u>Snake case</u> is a practice of naming symbols which contains words or elements using underscode as a separator, for example: <code>is_file_executable</code> or <code>server_name</code>. In snake case, only lowercase characters are used.<br>
+        <u>Camel case</u> uses uppercase letters for element separation, like: <code>isFileExecutable</code> or <code>ServerName</code>.
+      </em>
+    </p>
+  <%= bob_end_spans %>
+<p class='commentable' id="variables"></p>
+<p class='commentable' id="constants">
+  Constant is a kind of variable, which should not be changed. Constant syntax is very similar to variable, but it must start with the capital letter. Most programmers are using only capital syntax for this:
+  <%= bob_code filename: '3.1.constants.rb' %>
+</p>
+<p class='commentable' id="warning">
+  Be advised that in Ruby the constants are not very far from variables and you can change it - it is just giving a warning. In a session below, we've changed the constant content from "Hello, world" to "Hello, world!!!". Ruby gives the warning, but still allows to change the content.
+  <%= bob_code filename: '3.1.changing_constants.rb' %>
+</p>
+<p>
+  Ruby is <strong>case sensitive</strong> which means that the symbol <code>serverOne</code> is different than <code>serverone</code>. 
+</p>
+<%= bob_header 'Methods' %>
+<p class='commentable' id="methods">
+  Methods (aka functions, procedures) are defined using <code>def</code> keyword, and should begin with lowercase character. Good practice is to use <em>snake case</em> for method names, just like for variables. The definition finishes with <code>end</code> keyword. Here is a method to print well-know sentence:
+  <%= bob_code filename: '3.1.method.rb' %>
+</p>
+<p class='commentable' id="invoke-methods">
+  If you run the script above, nothing will happen. This is because the method has been defined, but not invoked yet. You need to run it by simply write its name:
+  <%= bob_code filename: '3.1.method_invoke.rb' %>
+</p>
+<p class='commentable' id="parenthesis">
+  Notice that there is no need to use parenthesis in Ruby when they are not really required to avoid confusion. It is completely up to you, you may write <code>puts("Hello world")</code> instead of <code>puts "Hello world"</code>. <br>
+  <strong>It must be no space between method name and the parenthesis.</strong>
+  <%= bob_code filename: '3.1.method_invoke_parenthesis.rb' %>
+</p>
+<p class='commentable' id="arguments">
+  Methods may have the arguments, given as comma-separated list of names in parenthesis after the name. And the methods always return a value of last expression evaluated in its body. Or you can stop the flow and return the value using <code>return</code> keyword. Consider two functions below:
+  <%= bob_code filename: '3.1.method_return_value.rb' %>
+</p>
+<p class='commentable' id="args22">
+  Function <code>sum</code>, defined in lines 1 - 3, takes two arguments, adds them and returns value of this addition - the last expression. Fourth line invokes <code>sum</code> function with arguments: <code>first_number = 2</code>, <code>second_number = 2</code>, gets the return value of 2 + 2 and assigns the value to the new variable <code>the_sum</code>. The second method uses <code>return</code> keyword to declare stricly where to exit the function and what to return. Notice the last expression <code>2 + 2</code> is not evaluated at all, because <code>return</code> breaks method flow immediately.
+</p>
+<p class='commentable' id="args2">
+  Take a look at the line 11: here, the interpreter will evaluate the value of <code>another_sum(2, 2)</code> and will pass the return value of it directly to the <code>puts</code> method. There is no need to use intermediary variable, like in the first example.
+</p>
+<p class='commentable' id="arguments3">
+  Notice the methods in the 11th line are invoked with parenthesis. We did it by the reason: to avoid human ambiguity. From the interpreter point of view this construction is the same as <code>puts another_sum(2, 3)</code> or even <code>puts another_sum 2, 3</code>. In this case it is quite clear, but what if we want to pass two arguments to <code>puts</code> (puts can take any number of arguments: it prints each of them in a new line)? For example, to print out the result of <code>another_sum 2, 3</code> and a number 5. In this case the proper expression is <code>puts(another_sum(2, 3), 5)</code> or even <code>puts another_sum(2, 3), 5</code> but not <code>puts another_sum 2, 3, 5</code> - because in this case interpreter will try to find out the method <code>another_sum</code> which tooks three arguments. To avoid it, <strong>use parenthesis in ambigious expressions</strong>, for code readability as well.
+</p>
+<%= bob_header 'Here documents' %>
+<p class='commentable' id="here">
+  <em>Here document</em> is a construction known from the Unix Shell, allows to build a string from the multiple lines. Like in the Shell, you must specify a symbol used to identify the end of the string preceded by <code>&lt;&lt;</code>. Notice there must be no space between <code>&lt;&lt;</code> and the identifier.
+  <%= bob_code filename: '3.1.here_document.rb' %>
+</p>
+<%= bob_header 'Loading Ruby Files' %>
+<p class='commentable' id="require">
+  There are two commands to load external Ruby source files (equivalent to Shell command <code>source</code>): <code>load</code> and <code>require</code>. The first one just loads and executes the given Ruby source file, the second one is more complex: it is loading the file only once. The argument to <code>require</code> command is a file name without ".rb" extention. It is searching for the file in the path given in global variable <code>$LOAD_PATH</code> (like <code>PATH</code> in the Shell). By default load path does not contain current directory, so you need to do <code>require './filename'</code> if you want to load file from the current directory, or modify <code>$LOAD_PATH</code> content.<br>
+  The example below assumes there is a file <code>test.rb</code> in a current directory contains only one line: <code>puts 'loaded'</code>:
+  <%= bob_code brush: :ruby do %>
+load 'test.rb'                 # load the file from current directory
+loaded
+#=> true
+
+load '/Users/turbo/test.rb'    # load the file again
+loaded
+#=> true
+
+require './test'               # require this file for the first time
+loaded
+#=> true
+
+require './test'               # require again - file not loaded again
+#=> false
+
+puts $LOAD_PATH                # content of the $LOAD_PATH
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/site_ruby/2.0.0
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/site_ruby/2.0.0/x86_64-darwin13.1.0
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/site_ruby
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/vendor_ruby/2.0.0
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/vendor_ruby/2.0.0/x86_64-darwin13.1.0
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/vendor_ruby
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0
+/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/x86_64-darwin13.1.0
+  <% end %>
+</p>

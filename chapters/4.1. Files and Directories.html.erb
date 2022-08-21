@@ -1,0 +1,226 @@
+<p>
+  In Ruby standard library there are two main objects to work with the filesystem: <code>File</code> and <code>Dir</code>. Both of them have a number of class methods, which are equivalent to Unix commands like <code>rm</code>, <code>cd</code>, <code>pwd</code>. You can also create an instance of this objects and represent the specific file.
+</p>
+
+<%= bob_header 'File Object Class Methods' %>
+<p class='commentable' id="file-object-class-methods">
+  For most of the operations on the files you do not have to create an instance of <code>File</code> object - the simpler way is to use one of the class methods and give a string with the filename as an argument. Here are the most used ones, the full list is available in the documentation: <code>ri File</code>.
+  <%= bob_code brush: :ruby do %>
+File.basename('/etc/hosts')      # equivalent to basename command
+#=> "hosts"
+File.dirname('/etc/hosts')       # equivalent to dirname command
+#=> "/etc"
+File.extname('hello_world.rb')   # returns the file extention
+#=> ".rb"
+
+File.exists?('/etc/hosts')       # file exists?
+#=> true
+File.file?('/etc/hosts')         # file exists and is a file (not directory or socket)?
+#=> true
+File.directory?('/etc/hosts')    # exists and is a directory?
+#=> false
+File.readable?('/etc/hosts')     # file exists and is readable for the current user?
+#=> true
+File.writable?('/etc/hosts')     # file exists and is writable?
+#=> false
+File.executable?('/etc/hosts')   # file exists and is executable for the current user?
+#=> false
+
+File.ftype('/dev/tty')     # file type, for example: 'file', 'directory', 'link' etc
+#=> "characterSpecial"         # see ri File::ftype for complete list
+File.size('testfile')      # returns file size in bytes
+#=> 7
+
+File.atime('/etc/passwd')        # file last access time (returns Time object)
+#=> 2013-10-15 13:33:56 +0200
+File.mtime('/etc/passwd')        # modification time
+#=> 2013-10-23 10:48:46 +0200
+File.ctime('/etc/passwd')        # create time
+#=> 2013-10-23 10:48:46 +0200
+
+stat = File.stat('testfile')  # creates File::Stat object with status information
+#=> #&ltFile::Stat dev=0x1000004, ino=25296715, mode=0100644, nlink=1, uid=506, gid=20, rdev=0x0, size=7, blksize=4096, blocks=8, atime=2014-07-17 14:08:43 +0200, mtime=2014-07-17 14:08:43 +0200, ctime=2014-07-17 14:08:43 +0200&gt
+stat.uid                      # user id (integer number)
+#=> 506
+stat.gid                      # group id
+#=> 20
+stat.mode                     # file permissions - integer number
+#=> 33188
+stat.mode.to_s(8)             # the same permissions converted to octal number
+#=> "100644"
+
+File.rename('testfile','renamed')  # equivalent to mv command
+#=> 0
+File.delete('renamed')             # equivalent to rm command
+#=> 1
+
+File.realpath('.')     # returns absolute path of the given file or directory
+#=> "/Users/turbo"
+File.realpath('/etc')  # and follows the symlinks
+#=> "/private/etc"
+
+  <% end %>
+</p>
+
+<%= bob_header 'Dir Object Class Methods' %>
+<p class='commentable' id="dir-object-class-methods">
+  The <code>Dir</code> class represents the directory. The same as <code>File</code> some of the commands are the class methods with directory name as the attribute:
+  <%= bob_code brush: :ruby do %>
+Dir.chdir('/etc')    # like cd command
+#=> 0
+Dir.pwd              # the same as pwd command
+#=> "/private/etc"
+
+Dir.entries('/etc')  # returns an array of all files and dirs in a given folder
+#=> [".", "..", "aliases", "aliases.db", "apache2" ......
+Dir.foreach('.') {|x| puts x}  # iterates on the directory contents
+.                                 
+..
+.irbrc
+
+Dir.home              # current user home directory
+#=> "/Users/turbo"
+
+Dir.rmdir('foo')       # trying to delete non-empty directory
+Errno::ENOTEMPTY: Directory not empty - foo
+  from (irb):1:in `rmdir'
+  from (irb):1
+  from /Users/turbo/.rbenv/versions/2.0.0-p247/bin/irb:12:in `&lt;main>'
+File.delete('foo/bar') # remove directory content
+#=> 1
+Dir.rmdir('foo')       # and now we can delete it
+#=> 0
+  <% end %>
+</p>
+
+<p class='commentable' id="dir-object-class-methods-2">
+  Remember that in Unix everything is a file, so if you want to change permissions or owner of the folder, read modification time or directory owner or group id, <strong>you should use <code>File</code> class for that.</strong> The <code>Dir</code> class is used to represent the collection of the folder content, and to special operations like <code>rmdir</code> or <code>chdir</code>.
+  <%= bob_code brush: :ruby do %>
+File.directory?('/etc')        # this is a directory
+#=> true
+
+File.stat('/etc').mode.to_s(8) # directory permissions
+#=> "40755"
+
+File.ctime('/etc')             # directory create time
+#=> 2014-07-14 15:15:17 +0200
+  <% end %>
+</p>
+
+<%= bob_header 'Instance of the File Object' %>
+<p class='commentable' id="file-object">
+  To work with the content of the file we need to create an object instance which represents the specific file. There is the method <code>File.open(filename, mode)</code> for that. It takes a string with the file name and the open mode as an arguments. The mode is a way how the file will be treated: <br>
+  <code>'r'</code> - means read-only open mode (default)<br>
+  <code>'r+'</code> - read and write, starts at the beginning<br>
+  <code>'w'</code> - write only: truncates the file to zero or creates a new if does not exists<br>
+  <code>'a'</code> - append only, starts at the end of the file (or create a new one) 
+  <%= bob_code brush: :ruby do %>
+file = File.open('/etc/passwd')        # default open mode is 'r' - read only
+#=> #&lt;File:/etc/passwd>
+
+file = File.open('/etc/passwd', 'r+')  # can't open /etc/passwd for writing
+Errno::EACCES: Permission denied - /etc/passwd
+  from (irb):3:in `initialize'
+  from (irb):3:in `open'
+  from (irb):3
+  from /Users/turbo/.rbenv/versions/2.0.0-p247/bin/irb:12:in `&lt;main>'
+
+file = File.open('foo', 'w')            # new file 'foo' created in current directory
+#=> #&lt;File:foo>
+File.exists? 'foo'
+#=> true
+  <% end %>
+</p>
+
+<p class='commentable' id="file-object-2">
+  There are some instance methods provides the same functionality on the instance of <code>File</code> object as the class methods described at the beginnig of the chapter:
+  <%= bob_code brush: :ruby do %>
+file = File.open('foo', 'r+')   # open the file for read and write
+#=> #&lt;File:foo>
+file.stat                       # returns File::Stat object
+#=> #&lt;File::Stat dev=0x1000004, ino=25300557, mode=0100644 .......
+file.mtime                      # directly accessing modification time
+#=> 2014-07-17 19:04:14 +0200
+  <% end %>
+</p>
+
+<p class='commentable' id="file-object-3">
+  We will deal with reading and writing to the file in the <%=bob_link_to_chapter(:next, 'next chapter') %>. Now it is worth to mention that <code>File.open</code> method may take the block as an argument. This is very convinient, because when the block finish, all I/O operations are flushed and the file descriptors are closed. In the example below we exclusive lock the file and modify its content. Without the block you should unlock the file before continuing your script, with the block Ruby does it for you.
+  <%= bob_code brush: :ruby do %>
+File.open('foo', 'r+') do |file|
+..   file.flock(File::LOCK_EX)
+..   file.write('locked!')
+.. end
+#=> 7
+  <% end %>
+</p>
+
+<%= bob_header 'Instance of the Dir Object' %>
+<p class='commentable' id="dir-object">
+  <code>Dir</code> object is created by calling <code>Dir.open(dirname)</code> class method. Similar to <code>File</code>, you can pass the block of code to be sure that the directory stream is closed before continue your script. <br>
+  Below there are examples of some of the instance methods:
+  <%= bob_code brush: :ruby do %>
+dir = Dir.open('/etc/')   # creates Dir instance
+#=> #&lt;Dir:/etc/>
+
+dir.read         # returns the first file in the directory
+#=> "."
+dir.read         # returns the second file....
+#=> ".."             # finally it will return nil, when no more files in the collection
+
+dir.rewind       # rewind to the first file
+#=> #&lt;Dir:/etc/>
+dir.read
+#=> "."
+
+dir.each {|x| puts x if x =~ /.*conf$/} # iterates on the directory
+ftpd.conf
+ip6addrctl.conf
+man.conf
+newsyslog.conf
+nfs.conf
+resolv.conf
+  <% end %>
+</p>
+
+<%= bob_header 'Recursive Search' %>
+<p class='commentable' id="recurse-find">
+  Now we know enough to write a simple equivalent to Unix 'find' command. Simple, so it only can search for the files matching the given regular expression. <br>
+  We will start with the function <code>find_files</code> with two arguments: searching directory and the regular expression pattern. Then we iterate on all the files of this folder and for every single one of them: <br>
+  <code> - line 4:   </code> doing nothing if it is current directory '.' or parent directory '.' <br>
+  <code> - lines 6-7:</code> printing out the file name (with the path) if it is an ordinary file and it is matching the pattern <br>
+  <code> - line 9:   </code> if it is a directory - search it using the same function <code>find_files</code>, but with this directory as an argument
+  <%= bob_code filename: '4.1.find.rb', highlight_lines: 9 %>
+</p>
+
+<p>
+  The results are as expected:
+  <%= bob_code brush: :shell do %>
+$ ruby find.rb /etc '.*conf'
+/etc/apache2/extra/httpd-autoindex.conf
+*** permission denied for /etc/cups/certs
+/etc/cups/cupsd.conf
+  <% end %>
+</p>
+
+<p class='commentable' id="recursion">
+  Calling functions from its own body is called <em>recursion</em>. It may look complicated, but in fact is is quite simple. Let's say we are searching in <code>/etc</code>. At the first step, the function will be invoked with string '/etc' as a <code>search_dir</code> value. So it iterates on the contents of <code>/etc</code>, prints when found ordinary file matching the pattern. And the magic comes when it processes the directory, let's say <code>/etc/apache2</code>. In this case, it will invoke itself with '/etc/apache2' as a value of <code>search_dir</code>. And the searching starts again, but now the subdirectory is searched. And so on, until it finish it all.
+</p>
+
+<%= bob_header 'There is a Method for that' %>
+<p class='commentable' id="find-glob">
+  Of course in Ruby there is many ways to do the functionality. Before writing the code like <code>find_files</code> above it is good to search the web to find out if there is a easier way to do the same (some build-in object or gem). And in this case, it is: the method <code>Dir.glob(pattern)</code> - the Ruby way to emulate <code>find</code> command. If block is given, it iterates on found files, else it returns the array filled with file names. The <code>pattern</code> is <strong>not a regular expression</strong> - it is more similar to shell way of matching. For full documentation see <code>ri Dir.glob</code>, here are most common patterns: <br>
+  <code>*</code> - matches any file or a part of the file, exactly like in shell, but <strong>does not include hidden files</strong> <br>
+  <code>**</code> - matches directories recurively <br>
+  <code>{a,b}</code> - matches either "a" or "b", so <code>{*,.*}</code> matches regular and hidden files 
+  <%= bob_code filename: '4.1.find_glob.rb'  %>
+</p>
+
+<p class='commentable' id="find-glob-basic">
+  The pattern <code>/etc/**/{*,.*}</code> matches every file (hidden or not) in every subdirectory of <code>/etc</code>, recursively. Of course there is no need to use Regexp just to find out all the files ending with <code>conf</code> - we can do it in just one line:
+  <%= bob_code brush: :ruby do %>
+Dir.glob("/etc/**/{*,.*}conf")
+#=> ["/etc/apache2/extra/httpd-autoindex.conf", "/etc/apache2/extra/httpd-dav.conf", ...
+  <% end %>
+</p>
+

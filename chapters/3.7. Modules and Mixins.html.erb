@@ -1,0 +1,131 @@
+
+<%= bob_header 'Modules' %>
+<p class='commentable' id="moduluo">
+  Module in Ruby this is a way to group some classes, functions, constants together. It is quite similiar to the class, but module can not have an instance or the subclasses - it is just a namespace for a group of objects. Module is defined by keywords <code>module ... end</code>. Below is an example of Network module containing method, class and constant:
+  <%= bob_code brush: :ruby do %>
+module Network                            # module name
+  PROTOCOLS = [:http, :ftp, :telnet]      # module constant
+  def Network.is_a_protocol?(protocol)    # module method is defined like the class method
+    PROTOCOLS.include? protocol           # module constact is accessible from the module method
+  end
+  class Ip                                # module class
+    def initialize(p1, p2, p3, p4)
+      @p1 = p1; @p2 = p2; @p3 = p3; @p4 = p4
+    end
+    def to_s
+      "#{@p1}.#{@p2}.#{@p3}.#{@p4}"
+    end
+    def inspect
+      "IP: #{to_s}"
+    end
+  end
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="access-module">
+  To access the module method use <code>Module_name.method_name</code>, <code>Module_name::CONSTANT_NAME</code> for constants and <code>Module_name::ClassName</code> for classes.
+  <%= bob_code brush: :ruby do %>
+Network::PROTOCOLS
+#=> [:http, :ftp, :telnet]
+
+Network.is_a_protocol? :ftp
+#=> true
+
+ip = Network::Ip.new 192, 168, 1, 1
+#=> IP: 192.168.1.1
+  <%  end %>
+</p>
+
+<p class='commentable' id="include-module">
+  But it would be annoying to write a module name many times, especially when you are writing a long script. To avoid this, you may insert all the things from the module using <code>include ModuleName</code> statement to treat all the stuff like the local objects:
+  <%= bob_code brush: :ruby do %>
+include Network
+#=> Object
+
+PROTOCOLS
+#=> [:http, :ftp, :telnet]
+
+is_a_protocol? :ftp
+#=> true
+
+ip = Ip.new 192, 168, 1, 1
+#=> IP: 192.168.1.1
+  <%  end %>
+</p>
+
+<%= bob_header 'Math Module' %>
+<p class='commentable' id="math-module">
+  There is a build in module <code>Math</code> contains trigonometric and transcendental function (see documentation <code>ri Math</code> for complete list of methods). It is good to <code>include Math</code> if you are planning to do more work with this module.
+  <%= bob_code brush: :ruby do %>
+Math.sin(Math::PI/2)
+#=> 1.0
+
+include Math
+#=> Object
+
+sin(PI/2)
+#=> 1.0
+
+sqrt 2
+#=> 1.4142135623730951
+  <%  end %>
+</p>
+
+<%= bob_header 'Etc Module' %>
+<p class='commentable' id="etc-module">
+  Another interesting built-in module is called <code>Etc</code> - a Ruby way to access information stored in <code>/etc/passwd</code> and <code>/etc/group</code>.
+  <%= bob_code brush: :ruby do %>
+require 'etc'               # you must load the file with Etc module before you can use it
+#=> true
+
+Etc.getlogin                # Etc.getlogin returns the current user name
+#=> "grych"
+
+Etc.getpwnam(Etc.getlogin)  # Etc.getpwnam returns object containing all the information from passwd
+#=> #&lt;struct Struct::Passwd name="grych", passwd="********", uid=501, gid=20, gecos="Tomasz Gryszkiewicz", dir="/Users/grych", shell="/bin/zsh", change=0, uclass="", expire=0&gt;
+
+Etc.getpwnam('grych').gecos # and this is how you can access this structure
+#=> "Tomasz Gryszkiewicz"
+  <%  end %>
+</p>
+
+<%= bob_header 'Mixins' %>
+<p class='commentable' id="mixins">
+  While discussing objects we talked about inheritance: to remind, object can be a subclass of the other object, it inherits all the methods, variables from the other class. But object can have only one superclass, so if you want to use some methods from few different sources, you must use <strong>Mixin</strong>. Mixin it is a module to be loaded into the class. All the module methods, constants will be included to the class.<br>
+  To have an example lets create the mixin called <code>Pingable</code> with method <code>alive?</code> returns true if ping to the server works.
+  <%= bob_code brush: :ruby do %>
+module Pingable
+  def alive?
+    p = `ping -c 1 -t 10 #{self.full_name}` # like in Shell you can run any command by putting it in ``
+    p.include? '1 packets received'         # if output of ping command include this string, returns true
+  end
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="mixins-next">
+  <code>self.fullname</code> in the code above <strong>does not refer to the mixin, but to the instance of an object</strong>, to which this mixin will be included. This is a kind of a protocol: we assume, that all object which want to include <code>Pingable</code> must have defined <code>full_name</code> method.<br>
+  Let's go and load the mixin to our Server class:
+  <%= bob_code brush: :ruby do %>
+class Server
+  include Pingable              # include previously defined mixin
+  def initialize(name, domain)
+    @name = name
+    @domain = domain
+  end
+  def full_name                 # mixin will call that function
+    @name + @domain
+  end
+end
+
+s = Server.new('www', '.startrek.com')
+#=> #&lt;Server:0x007fce68aee3e8 @name="www", @domain=".startrek.com"&gt;
+s.alive?
+#=> true
+
+Server.new('www', '.starwars.com').alive?
+#=> false
+
+  <%  end %>
+</p>

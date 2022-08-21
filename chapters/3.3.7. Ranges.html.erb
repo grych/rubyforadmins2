@@ -1,0 +1,59 @@
+<%= bob_header 'Ranges' %>
+<p class='commentable' id="ranges">
+  The <code>Range</code> object represents all the values between two border values, for example all integer numbers between 1 and 10, all float numbers between 1.0 and 2.0, all the letters between A and Z, etc. The syntax for a range is double or triple dot between two border objects, where double dot represents all values including the border values and the triple dot syntax does not include the higher border value. So, for example, <code>1..5</code> represents numbers 1, 2, 3, 4 and 5, and <code>1...5</code> only 1, 2, 3 and 4.<br>
+  You can use range to quickly produce arrays of consequtive values using <code>to_a</code> method on range:
+  <%= bob_code brush: :ruby do %>
+digits = 0..9
+#=> 0..9
+
+digits.to_a
+#=> [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+characters = 'a'..'z'
+#=> "a".."z"
+
+characters.to_a
+#=> ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]  
+
+('bar'..'baz').to_a          # it is working not only on the single letters
+#=> ["bar", "bas", "bat", "bau", "bav", "baw", "bax", "bay", "baz"]
+
+('aa'..'zz').count           # all combinations of two letter strings
+#=> 676
+
+(0...9).to_a
+#=> [0, 1, 2, 3, 4, 5, 6, 7, 8]  # triple dots exclude the right (bigger)
+  <%  end %>
+</p>
+
+<%= bob_header 'Case Equality Operator' %>
+<p class='commentable' id="ceo-operator">
+  With the range comes the Ruby-specific operator, case equality operator <code>===</code>. It returns true, if the object is in the specific range. Notice that you must use this operator with the range as its left argument - <strong>this operation is not commutative</strong>.
+  <%= bob_code brush: :ruby do %>
+(1..100) === 99            # 99 is in range from 1 to 1000
+#=> true
+
+(1..100) === 100           # 100 is in this range as well
+#=> true 
+
+(1..100) === 101           # but not 101
+#=> false
+
+(1...100) === 100          # triple dots excludes right border (100)
+#=> false
+
+(1.0...5.0) === 3.1415926  # works for float numbers as well
+#=> true
+  <%  end %>
+</p>
+
+<%= bob_header 'Reverse Range' %>
+<p class='commentable' id="reverse-range">
+  Notice that range is not working in reverse (when the left object is bigger than the right one). Ruby will allow you to create such object, but it will not contain any elements.
+  <%= bob_code brush: :ruby do %>
+reversed = 5..1
+#=> 5..1
+reversed.count
+#=> 0
+  <%  end %>
+</p>

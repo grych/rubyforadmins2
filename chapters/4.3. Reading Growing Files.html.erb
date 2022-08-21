@@ -1,0 +1,69 @@
+<%= bob_header 'tail -f' %>
+<p>
+  The <code>tail -f</code> command is one of the most frequent used by Sysadmins around the world. Reading of growing log files allows us to monitor system health online and react to the changes in a realtime. So why not to script it? In this chapter we will try to find out the way to create realtime log monitoring programs.
+</p>
+
+<%= bob_header 'Basic: Polling the File' %>
+<p class='commentable' id='basic-loop'>
+  In the previous chapter, we were reading from the infinite block device - <code>/dev/random</code>. We can do the same with the growing file. First at all we should 'rewind' the file to its end to make sure we will catch only the just added parts, and then  <code>read</code> the opened file forever.
+  <%= bob_code filename: '4.3.tail_loop.rb' %>
+</p>
+
+<p>
+  <%= bob_left_span %>
+    <p>
+      This program works as expected, displays the additional data which is appended to the file. It works almost in realtime with maximum delay of 1 second. But it is a waste of system resources: the process must wake up every second, read the file, check for a changes, etc. Much better would be to have an OS <em>event</em> triggered every time when file changes, handled with our own <em>callback</em>.
+    </p>
+  <%= bob_right_span %>
+  <p>
+    <em>Event</em> is an action coming from the program or outside world, which may be handled by the program. Function or code block  which handle the event is called <em>callback</em>.
+  </p>
+  <%= bob_end_spans %>
+</p>
+
+<%= bob_header 'KQueue on BSD systems' %>
+<p class='commentable' id='kqueue'>
+  BSD-like operating systems (FreeBSD, OS X) have built-in kernel event notification subsystem, called <code>kqueue</code>. It notifies the program when some kernel event occurs. In particular, you can ask the kernel to trigger the event every time any program appends some specified file. With this technique you do not need to check the file yourself - the event will launch the specified code. <br>
+  Remember that <strong>kqueue is only available on BSD and Darwin</strong>.
+</p>
+<p>
+  You do not need to know all the complicated <code>kqueue</code> staff: <strong>There is a Gem for That</strong>. This gem provides Ruby interface to <code>kqueue</code>. Simple install it with: 
+  <%= bob_code brush: :shell do %>
+gem install rb-kqueue
+  <% end %>
+</p>
+
+<p class='commentable' id='kqueue2'>
+  If you are not familiar with event-based programming, take a deeper look at the program below. After initializing the object we create a Watcher on our file, triggering every time when the file is extended. The other possibilities are: <code>:write</code>, <code>:delete</code>, <code>:rename</code>, etc (refer to <code>ri watch_file</code> for full list). The Watcher takes a block - this is a callback of the event. <br>
+  The next step is to wait for the event. It is done with <code>queue.run</code> - this puts our script in the sleep mode and starts responding the the events. So from now, every time the file is appended, the callback block is executed.
+  <%= bob_code filename: '4.3.tail_kqueue.rb', highlight_lines: [8, 10] %>
+</p>
+
+<%= bob_header 'Digression: KQueue with Processes' %>
+<p class='commentable' id='kqueue3'>
+  Notice that <code>kqueue</code> has more possibilites. You can <code>watch_process</code> as well, react when some process exits or forks. Below is a small example - waiting the process with the given PID to finish. Consider how useful it could be when waiting for some background jobs to finish! <br>
+  Notice that we used <code>queue.process</code> instead of <code>queue.run</code>. The difference it that <code>queue.process</code> launches only one event and continues after handling it. In this case, we are waiting for process to finish, so it can happen only once.
+  <%= bob_code filename: '4.3.wait_for.rb' %>
+</p>
+
+<%= bob_header 'Inotify on Linux' %>
+<p>
+  On Linux there is a kernel subsystem called <code>inotify</code> to notice changes on the filesystem. To use it in Ruby the best is to install the 'rb-inotify' Gem with <code>gem install rb-inotify</code>. The API for that is very similar to <code>kqueue</code>:
+  <%= bob_code filename: '4.3.tail_inotify.rb', highlight_lines: [7, 9] %>
+</p>
+
+<p class='commentable' id='inotify2'>
+  The difference is that the watcher creation method is called <code>watch</code> instead of <code>watch_file</code>, and it notifies on <code>:modify</code>, not <code>:extend</code>. All the rest remains similar. <br>
+  Remember that <strong>inotify is only available on Linux</strong>.
+</p>
+
+<%= bob_header 'Putting All Systems Together' %>
+<p>
+  It is a good practice to write platform-independent code. But it does not mean that we must stick with the simplest techniques, like polling the file every few seconds. Kqueue and inotify are powerful systems and it is worth to use them. So why not to put all the scripts together and use different technique depends on which OS we are on?
+  <%= bob_code filename: '4.3.tail.rb' %>
+</p>
+
+<p class='commentable' id='all2'>
+  In the code above we defined a general, OS-independent method <code>tail_dash_f</code>, which takes filename and the code block. This block will be executed every time the file changes, and the block variable <code>data</code> is filled with just appended part of the file. <br>
+  <code>RUBY_PLATFORM</code> constant contains string representing the current operating system, for example "amd64-freebsd8" or "x86_64-darwin12.4.0". So it is easy to find out on which OS the script is running. Notice that loading the gems (<code>require</code> method) is inside the <code>when</code> blocks, so you do not have to install kqueue Gem on Linux or Inotify on BSD.
+</p>

@@ -1,0 +1,160 @@
+<%= bob_header 'if-then-else' %>
+<p class='commentable' id="if-then-else">
+  <em>if-then-else</em> statement in Ruby is quite similar to the other programming languages and to the Shell Script. The syntax is following:
+  <%= bob_code brush: :ruby do %>
+if contitional_expression [then]
+  expressions ...
+elsif contitional_expression [then]
+  expressions ...
+else
+  expressions ...
+end
+  <%  end %>
+</p>
+<p class='commentable' id="what-is-true">
+  Just to remind - in Ruby, <strong>conditional expression is true unless it evaluates to <code>false</code> or <code>nil</code></strong>. All except <code>false</code> and <code>nil</code> is <em>true</em>. Number zero, empty array, zero-length string - all of this object means <em>true</em> in Ruby conditionals.<br>
+  The keyword <code>elsif</code> means <em>else if</em> - the next conditional expression which is checked when all the expressions before evaluates to <em>false</em>. The code after <code>else</code> is running if all the coditionals evaluate to <code>false</code> or <code>nil</code>.
+  <br>
+  The word <code>then</code> is optional and it have to be use only if you want to put the code in the same line. It is not very common, because Ruby have the better way to describe such expressions in one line - see <em>conditional modifier</em> below.
+  <%= bob_code brush: :ruby do %>
+if []
+  puts 'Empty array is not nil or false!'
+end
+
+if 3>2 then
+  puts 'it is indeed'
+end
+
+if 3>2 then puts 'it is indeed' end   # using 'then' to create one line expression
+  <%  end %>
+</p>
+
+<%= bob_header 'Conditional Modifier' %>
+<p class='commentable' id="modifier">
+  Conditional modifier is a very interesting and popular way to write conditional expression in the one line. The syntax is reversed - first goes the code, then the condition: <code><em>statement</em> if <em>conditional_expression</em></code>. The <em>statement</em> will be executed only when <em>conditional_expression</em> evaluates to <em>true</em>. This is simpler and better readable for humans.
+  <%= bob_code brush: :ruby do %>
+array.push 'foo' if not array.include? 'foo'  # push string 'foo' if array does not include it
+#=> ["foo"]
+
+array.push 'foo' if not array.include? 'foo'  # trying again
+#=> nil
+array                                         # only one object in the array
+#=> ["foo"]
+  <%  end %>
+</p>
+
+<%= bob_header 'Unless' %>
+<p class='commentable' id="unless-if">
+  For better human readabilty Ruby provides the keyword <code>unless</code>. It is the oposite for <code>if</code> and means simply <code>if not</code>. It can be used both in <em>unless-then-else</em> expressions (but there is no equivalent to <code>elsif</code>) and conditional modifiers. Especially for this one it provides pretty code, which everyone can easy read, even without the knowledge of the language.
+  <%= bob_code brush: :ruby do %>
+array.push 'foo' unless array.include? 'foo'      # push string 'foo' unless array includes it
+  <%  end %>
+</p>
+
+<%= bob_header 'Conditional Expressions Returning Values' %>
+<p class='commentable' id="returning-values">
+  In Ruby, everything returns value. That means that <em>if-then-else</em> does it as well - returns the value of last processed statement.<br>Also, we have a c-style conditional operator: <code>condition ? true_expression : false_expression</code>, evaluates and returns <code>true_expression</code> only if <code>condition</code> evaluates to <em>true</em> or <code>false_expression</code> if it evaluates to <code>false</code> or <code>nil</code>.
+  <%= bob_code brush: :ruby do %>
+if a > b      # procedural way to find out the maximum value of two variables
+  max = a
+else
+  max = b
+end
+
+max = if a > b   # functional-style way to do the same
+  a
+else
+  b
+end
+
+# one-liner in this case doesn't look so bad:
+max = if a > b then a else b end
+
+# c-style conditional expression:
+max = a > b ? a : b
+  <%  end %>
+</p>
+
+<%= bob_header 'Case Statement' %>
+<p class='commentable' id="case-statement">
+  Case statement in Ruby is similar to <em>case/esac</em> in Unix Shell. It evaluates the expression and, depends on the value, runs the specific code parts. The syntax:
+  <%= bob_code brush: :ruby do %>
+case expression
+when value then statement  # for one-liners use 'then'
+when value, value          # if any of this values fits 
+  statements               
+else                       # in case no values fits the expression
+  statements
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="case-returns-value">
+  Identical to <em>if-then-else</em>, <code>case</code> expression returns value . The example below shows both ways to use <code>case</code> statement in Ruby:
+  <%= bob_code brush: :ruby do %>
+case netmask            # netmask is a string with network mask
+when '255.0.0.0'
+  address_class = 'A'   # this is Class A subnet
+when '255.255.0.0'
+  address_class = 'B'
+when '255.255.255.0'
+  address_class = 'C'
+else
+  puts "[ERROR] unknown Netmask #netmask"
+  address_class = nil   # nil in this case means 'unknown class'
+end
+
+address_class = case netmask
+when '255.0.0.0'     then 'A'
+when '255.255.0.0'   then 'B'
+when '255.255.255.0' then 'C'
+else
+  puts "[ERROR] unknown Netmask #netmask"
+  nil    # this is unnecessary, because puts returns 'nil'; done for better readability
+end
+  <%  end %>
+</p>
+
+<%= bob_header 'Case Equality Operator in Case Statement' %>
+<p class='commentable' id="ceo-operator">
+  When discussing ranges and type system we mentioned about <em>case equality</em> (triple equal sign) operator. In most cases, this operator is identical to normal equality (<code>==</code>) - so, for example, <code>1 === 1.0</code> is <em>true</em>. But in some cases it is a kind of extention. For example in <code>Range</code> you can check if the object is within the specific range: <code>(1..100) === 3.14</code>, or you can check if the object is kind of the class: <code>Fixnum === 42</code>. In case statement, the expression after keyword 'case' is compared with the values (coming after 'when') using this operator (so that is why it is called the 'case equality operator'). In the example below we assume that <code>http_return_code</code> variable contains some return code from http request (like 404 - not found)
+  <%= bob_code brush: :ruby do %>
+case http_return_code
+when 100..199
+  puts "Informational"
+when 200..299
+  puts "Successfull"
+when 300..399
+  puts "Redirection"
+when 404                      # if return code is 404, it will match here
+  puts "*** Page not found"   # and finish the case statement
+when 400..499                 # so in this case
+  puts "Client Error"         # this code will not be evaluated
+when 500..599
+  puts "Server Error"
+else
+  puts "*** Unknown"
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="object-type">
+  Case statement is often used to determine the object type in functions which can have object of many types as the argument. The good example is the <code>[]</code> method for selecting substrings from string: it can take an integer (<code>s[3]</code>) and then return the single character, the range (<code>s[1..3]</code>) and return the substring, or you can use Regular Expression or even String as an argument. The other example is to pass an object or array of objects as the argument, and when the argument is array, process with all elements. <br>
+  <%= bob_code brush: :ruby do %>
+case argument
+when NilClass
+  puts "Server can't be nil!"
+when WindowsServer
+  puts "Can't ssh to Windows, delete everything manually"
+when UnixServer, MacOSXServer
+  argument.ssh "root", "root123", "rm -rf /"  # this classes should have defined 'ssh' method
+when Array
+  # below is the ruby way to do the loop, see next chapter
+  for machine in argument
+    machine.ssh "root", "root123", "rm -rf /"
+  end
+end
+  <%  end %>
+</p>
+
+

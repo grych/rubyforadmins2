@@ -1,0 +1,36 @@
+<p>
+<%= bob_left_span %>
+  <p>
+    <em>Ruby for Admins</em> is designed to be a source of information and inspiration for all Sysadmins, DBAs, Application Administrators, who are tired and bored scripting with XX century, ancient languages, tools and shells, and who want to learn to use modern programming languages and techniques. If you already know Ruby, you might find here an inspiration for using it in your daily work. If you don't know it yet, you'll be able to learn the basics here - but only the basics, do not expect full Ruby course.
+  </p>
+<%= bob_right_span %>
+    <%= bob_last_read %>
+    <%= bob_new_arrivals 4 %>
+<%= bob_end_spans %>
+</p>
+<p class='commentable' id="format-of-this-page">
+  The format of this webpage is <a href="https://github.com/grych/bob" target="_blank">blog-o-book</a>, which is not exactly a blog nor a book. You can browse and read it as a book, starting with the <%= bob_link_to_chapter :first, 'Chapter One' %> or read it as a blog, browsing the articles, adding a comments (keep an eye on this <i class="fi-comment-quotes"></i> symbol), linking to selected paragraphs. It is all up to you.
+  And last but not least, it is free! 
+</p>
+<p>
+  <h5><%= bob_link_to_chapter :first, 'Go to the First Chapter' %></h5> 
+</p>
+<%= bob_header 'Teaser' %>
+<p class='commentable' id="teaser">
+  To give you an idea how quick and easy is to work with Ruby, let's take a look at almost-real-world example. Assume you want to develop a shell script, which creates a series of SQLs to kill all the active Oracle sessions. In the Shell, you might write it like this:
+  <%= bob_code filename: '0.get_active_sessions.sh' %>
+</p>
+<p>
+  In Ruby, the same script would look like this:
+  <%= bob_code filename: '0.get_active_sessions.rb' %>
+</p>
+<p class='commentable' id="teaser-explained">
+  First at all, there is no need to run <em>sqlplus</em> anymore - thanks to <em>oci8</em> gem (gems are Ruby libraries and <em>oci8</em> is the one for Oracle connectivity) loaded in the second line with <code>require</code> command. In the Shell Script, you should check the return code and break the script if <em>sqlplus</em> fails, to ensure the script will not continue. In Ruby, there is no need to do it: in case when <code>OCI8.new()</code> cannot connect to the database generates an exception and break the program flow. As you probably guess, <code>ARGV</code> is the array with command line arguments, <code>puts</code> is an equivalent of <em>echo</em> in shell, and <code>#{}</code> is used for string formatting. But <strong>where is the for loop?</strong> Well, we will try to solve this mystery in <%= bob_link_to_chapter :first, 'the next chapters' %>.
+</p>
+<%= bob_header 'Author' %>
+<p class='commentable' id="author">
+  This book is written by Tomek 'Grych' Gryszkiewicz. Do not hestitate to contact me at <a href="mailto:grych@tg.pl?Subject=Ruby%20for%20Admins">grych@tg.pl</a>, check my <a href="http://www.tg.pl">page</a> or just add a comment here:
+</p>
+<p>
+  &copy;2014 Tomek Gryszkiewicz. All rights reserved. <br>
+</p>

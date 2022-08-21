@@ -1,0 +1,34 @@
+<p>
+  This book is dedicated to System Administrators, DBAs and all other Power Unix Users. I assume that the you are familiar the shell scripting and other standard Unix tools like awk, sed, grep. I do not assume a deep knowledge of programming languages and paradigms, and I will try to explain the basics of modern software development. If you know Ruby, feel free to skip the first few chapters.
+</p>
+<p class='commentable' id="begin">
+  All of the examples should work on any Unix system running Ruby 2.0.0. Most of them should work on Windows as well - the differences are with the file paths, file attributes and the core OS functions. If you are Windows power user, you probably will be able to modify this examples yourselves.
+</p>
+<%= bob_header 'What is Ruby?' %>
+<p class='commentable' id="what-is-ruby">
+  Ruby is an object oriented, general purpose programming language. It was invented by Yukihiro "Matz" Matsumoto in 1990s because Matz was not very happy with existing languages: <br>
+  <em>"I was talking with my colleague about the possibility of an object-oriented scripting language. I knew Perl (Perl4, not Perl5), but I didn't like it really, because it had the smell of a toy language (it still has). The object-oriented language seemed very promising. I knew Python then. But I didn't like it, because I didn't think it was a true object-oriented language — OO features appeared to be add-on to the language. As a language maniac and OO fan for 15 years, I really wanted a genuine object-oriented, easy-to-use scripting language. I looked for but couldn't find one. So I decided to make it."</em>
+  <br>
+  Ruby is open source, free software, licensed under Ruby License or BSD License.
+</p>
+<%= bob_header 'General Purpose' %>
+<p class='commentable' id="general">
+  Ruby is widely used in many real-world applications. Here we will focus on system administration scripting, text processing, file handling, but the most common use of Ruby this days is to build the web applications. There is a number of frameworks on which you can build your web app, such as Sinatra or Ruby on Rails. But it is not all, there are GUI toolkits to create X-Window or MS Windows application with GUI interface. Rubymotion helps to build iOS native programs, and many more. <br>
+  This page is written in Ruby as well.
+</p>
+<%= bob_header 'Easy and Beautiful' %>
+<p class='commentable' id="easy">
+  Ruby is designed to be a language for practical purposes, so it has a lot of features which makes your life easier. And even if some features are missing it probably could be found as an external library (called <strong>Gem</strong> in Ruby world). There is almost 78000 Gems to use so one could say <em>"There is a Gem for that"</em>. <br>
+   Despite being easy, in the same time, Ruby is elegant. The code is very readable for humans, self-explaining, so not too many comments needed. And, last but not least, programming with Ruby is a fun!
+</p>
+<%= bob_header 'Flexible' %>
+<p class='commentable' id="flexible">
+  Ruby is flexible. It allows meta-programming, so the program can change itself while running. It allows modification of core objects, so there is a way not only to add new methods to existing, build-in classes but to change the behaviour of every method and operator. It is easy to create a new language and write a program in it inside your Ruby scripts (such technique is called DSL: Domain Specific Language).
+</p>
+<%= bob_header 'Object Oriented' %>
+<p>
+  In Ruby, <strong>everything is an object</strong>.
+  Literally everything - there are no primitive types like <em>integer</em> in Java or C++. Instead of the primitive integer, there is a class <code>Fixnum</code> contains all the operations on numbers, like <code>to_s()</code> (to convert the number to string) or <code>size()</code> (to find out how much space the number takes in memory). <br>
+  But, unlike in the leading Object Oriented language, <strong>you do not have to write any classes when developing a simple script</strong>. In Ruby, hello_world.rb is a one-liner as it supposed to be - no more <code>public class HelloWorld { public static void main(String[] args) {...</code>
+</p>
+

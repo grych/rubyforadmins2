@@ -1,0 +1,187 @@
+<%= bob_header 'Exceptions' %>
+<p class='commentable' id="exceptions">
+  An exception happens when some code breaks the program flow due to unexpected circumstances. In this case, program creates the <code>Exception</code> object and pass the control to exception handler or - if it is not handled - breaks execution of the program.
+  The reasons for the exception can be inside the program (like, for example, division by zero) or outside (file does not exists, can not connect to the database). To have an example consider the small code below which tries to print the content of the file given as an argument to stdout - exactly like <code>cat</code> command does:
+  <%= bob_code brush: :ruby do %>
+def cat(file)
+  f = open(file)
+  puts f.read
+  f.close
+  puts "### end of file: #{file} ###"
+end
+cat ARGV[0]
+puts "### end of program ###"
+  <%  end %>
+</p>
+
+<p class='commentable' id="exceptions2">
+  In normal circumstances this scripts does what it should do. It is reading the given file and printing it out to stdout:
+  <%= bob_code brush: :text do %>
+joe:~ turbo$ ruby cat.rb /etc/ftpusers 
+# list of users disallowed any ftp access.
+...
+www
+### end of file: /etc/ftpusers ###
+### end of program ###
+  <%  end %>
+</p>
+
+<%= bob_header 'Exception Raised' %>
+<p class='commentable' id="raised-exception">
+  But what if you make a typo and will try to read not existing file? Then function <code>open</code> <strong>raises an exception</strong>, program stops the flow and the <strong>stack trace</strong> is printed to stdout: 
+  <%= bob_code brush: :text do %>
+joe:~ turbo$ ruby cat.rb /etc/resolv.cnf 
+cat.rb:2:in `initialize': No such file or directory - /etc/resolv.cnf (Errno::ENOENT)
+  from cat.rb:2:in `open'
+  from cat.rb:2:in `cat'
+  from cat.rb:7:in `&lt;main>'
+  <% end %>
+</p>
+
+<%= bob_header 'Stack Trace' %>
+<p class='commentable' id="stack-trace">
+  The <strong>stack trace</strong> contains the information about the exception. It is quite useful to debugging: the first line indicates where (<code>cat.rb:2</code> means in the file cat.rb at the 2nd line) and what (No such file or directory) happened. There is the name of the exception object as well - <code>Errno::ENOENT</code> (so it is <code>ENOENT</code> constant from <code>Errno</code> module). Next lines show the actual stack of the method (with the file names and the line numbers), which means the exception was raised in the method 'open', called from the method 'cat', called from the method '&lt;main>' (the main program flow).
+</p>
+
+<%= bob_header 'Handling the Exception' %>
+<p class='commentable' id="handling1">
+  The exceptions are possible to handle. This means in case of the exception your program can do something with this error and continue working. To handle the exception, you must show where in the program an exception may occur. It is done with <em>begin-rescue-end</em> statement, with syntax:
+  <%= bob_code brush: :ruby do %>
+begin
+  ... # lines of code - normal program flow
+rescue ExceptionName  
+  ... # lines of code - exception handler for ExceptionName 
+rescue AnotherExceptionName 
+  ... # lines of code - exception handler for AnotherExceptionName
+else
+  ... # lines of code - handler for the other exceptions
+ensure
+  ... # lines of code - run always
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="handling2">
+  Program executes the lines between <code>begin</code> and <code>rescue</code>. In case of exception it is looking for the exception name after any of <code>rescue</code> keyword and if found, it is executing the code corresponding to specified exception. When the exception name is not found, the chunk of code after <code>else</code> keyword is being evaluated. Finally, the code after <code>ensure</code> is being run, regardless the exception was raised or not. <br>
+  We know now how to handle the exception, let's try it in our small example:
+  <%= bob_code brush: :ruby do %>
+def cat(file)
+  begin
+    f = open(file)
+    puts f.read
+    f.close
+    puts "### end of file: #{file} ###"
+  rescue Errno::ENOENT => e
+    puts "Can't cat the file: #{file} because of exception: #{e.message}"
+  end
+end
+cat ARGV[0]
+puts "### end of program ###"
+  <%  end %>
+</p>
+
+<p class='commentable' id="handling3">
+  Now the whole method body is under supervision of the exception hander. Why not only the <code>open</code> method? Well, we do not want to run <code>f.read</code> when the file is not found or not readable. <br>
+  In this version of program in case of wrong filename script generates the proper message and continues working (so '### end of program ###' is printed out). Notice the <code>=> e</code> entry after exception name, this means that the exception object will be assigned to local variable <code>e</code>, which can be used, as in the example, to show the details of the exception by running the <code>message</code> method. 
+  <%= bob_code brush: :text do %>
+joe:~ turbo$ ruby cat.rb /etc/paaaassswd  
+Can't open the file: /etc/paaaassswd because of exception: No such file or directory - /etc/paaaassswd
+### end of program ###
+  <%  end %>
+</p>
+
+<p class='commentable' id="handling4">
+  In this case we handle the only one exception - <code>ENOENT</code>. All other exceptions still breaks the program flow and generates stack trace:
+  <%= bob_code brush: :text do %>
+joe:~ turbo$ ruby cat.rb /etc/ssh_host_key
+cat.rb:3:in `initialize': Permission denied - /etc/ssh_host_key (Errno::EACCES)
+  from cat.rb:3:in `open'
+  from cat.rb:3:in `cat'
+  from cat.rb:11:in `&lt;main>'
+  <%  end %>
+</p>
+
+<p class='commentable' id="handling5">
+  It is easy add the handler to <code>Errno::EACCES</code> exception to the existing one:
+  <%= bob_code brush: :ruby do %>
+def cat(file)
+  begin
+    f = open(file)
+    puts f.read
+    f.close
+    puts "### end of file: #{file} ###" 
+  rescue Errno::ENOENT, Errno::EACCES => e
+    puts "Can't open the file: #{ARGV[0]} because of exception: #{e.message}"
+  end
+end
+cat ARGV[0]
+puts "### end of program ###"
+  <%  end %>
+</p>
+
+<p class='commentable' id="handling6">
+  Now the program behaves as expected.
+  <%= bob_code brush: :text do %>
+joe:~ turbo$ ruby cat.rb /etc/ssh_host_key
+Can't open the file: /etc/ssh_host_key because of exception: Permission denied - /etc/ssh_host_key
+### end of program ###
+  <%  end %>
+</p>
+
+<%= bob_header 'Handling Every Exception' %>
+<p class='commentable' id="hanling-all">
+  It is possible to handle every exception, but <strong>it is not a good practice</strong>, because when something really unpredictable occurs, debugging starts to be a nightmare. For example, pressing <kbd>Ctrl</kbd> + <kbd>C</kbd> while executing Ruby code raises an exception as well. <br>
+  General rule is to handle known exceptions and leave the rest. It is better for the script to crash in case of unhandled error!
+</p>
+
+<%= bob_header 'Raising the Exception' %>
+<p class='commentable' id="raising">
+  You can throw any exception by calling <code>raise [ExceptionName], message</code> statement. The first argument is optional, if you ommit it, <code>RuntimeException</code> will be thrown. The second argument is just a string message with the exception details. <br>
+  Because the exception is - like everything - an object, to define your own one you must create the class inheriting from <code>Exception</code> class. Let's go back to our <code>Ip</code> class:
+  <%= bob_code brush: :ruby, highlight_lines: [1, 7, 8] do %>
+class IpAddressException < Exception; end
+class Ip
+  def initialize(*parts)  # with this syntax you can provide multiple arguments, 'parts' becames an array
+    if parts[0].is_a? String
+      parts = parts[0].split(".").map { |x| x.to_i } 
+    end
+    raise IpAddressException, "IP address should be 4 bytes long, given: #{parts.count}" unless parts.count == 4
+    parts.each { |part| raise IpAddressException, "Not a byte: #{part}" unless (0..255) === part }
+    @parts = parts
+  end
+  def to_s
+    @parts.join('.')      # 'join' converts an array to the string with given string between
+  end
+  def inspect
+    "IP: #{to_s}"
+  end
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="raising2">
+  At the beginning lets take a look on the new way to passing the argument to the function - <code>def function(*arguments)</code>. With this syntax you may pass any numer of arguments, separated by the colon, and all of them will be combined to an array. If you do not pass any args, the array becomes empty. <br>
+  But giving IP adress as an array of bytes is not very convinient. Sometimes it would be better to just pass the string with standar ip-address dot format. So, in lines 4-6 program checks if the first argument is a string, and if yes, converts it to the array of strings by dividing it to the substrings based on the delimiter of dot using <code>split</code> method. Because the result of <code>split</code> is an array of strings, the next step is to convert it to integers, applying <code>to_i</code> to all member of the array. At the end we have an array of integer parts of the IP address. <br>
+  Notice that there is an opposite method to <code>split</code> - <code>join</code>, which gets the array and the delimiter and converts the array to the delimiter separated string, for example <code>[1,2,3].join(', ') #=> "1, 2, 3"</code>. 
+</p>
+<p class='commentable' id="raising3">
+  Let's go back to the exception. In the first line new exception <code>IpAddressException</code> is defined. It is a subclass of the <code>Exception</code> class and that is enough - no need to overwrite any methods. We want to check if the IP address given to the constructor is valid. First, in line 7, program checks if there are exactly 4 parts of the IP address. If not, it raises <code>IpAddressException</code> with a proper message. Next it iterates through each part of the address and raises <code>IpAddressException</code> if any of the parts is not a byte.
+  <%= bob_code brush: :ruby do %>
+ip = Ip.new(192, 168, 1, 3)    # proper IP address
+#=> IP: 192.168.1.3
+
+ip = Ip.new('192.168.1.3')     # proper IP address, parsed from the string
+#=> IP: 192.168.1.3
+
+ip = Ip.new(192, 168, 1)       # too short!
+IpAddressException: IP address should be 4 bytes long, given: 3
+  from (irb):56:in `initialize'
+  ...
+
+ip = Ip.new('192.168.1.300')   # not an IP
+IpAddressException: Not a byte: 300
+  from (irb):57:in `block in initialize'
+  ...
+  <%  end %>
+</p>
+

@@ -1,0 +1,186 @@
+<%= bob_header 'Lambda Functions' %>
+<p class='commentable' id='lambda'>
+  The <code>lambda</code> is an anonymous function - it has a definition (a body), but it is not bound to an identifier. In contrast to the method, <code>lambda</code> does not belong to any object. This is quite similar to Rubys <em>block</em>, but, unlike the block, <code>lambda</code> in an object, so it can be stored in the variable or passed to methods as an argument.
+</p>
+
+<p class='commentable' id='lambda-syntax'>
+  In Ruby, lambda function syntax is <code>lambda block</code> or <code>->(variables) block</code>. Block can be given either with <code>do ... end</code> or with parenthesis <code>{ ... }</code>. Good practice is to use keyword <code>lambda</code> when defining longer functions and leave the arrow syntax for one-liners.
+  <%= bob_code brush: :ruby do %>
+lambda do
+  |x|
+  x * x
+end
+#=> #&lt;Proc:0x007fd8411ea3e0@(irb):1 (lambda)&gt;
+->(x) { x * x }
+#=> #&lt;Proc:0x007fd8409829c8@(irb):5 (lambda)&gt;
+  <% end %>
+</p>
+
+<p class='commentable' id='lambda3'>
+  As you can see, in Ruby lambda is just a <code>Proc</code> object instance. There are more ways to create <code>Proc</code> instance, like with <code>Proc.new</code> or using keyword <code>proc</code>, but it is not in a scope of this book. Anyway it is recommended to learn about it and know the difference between the <code>lambda</code> and the <code>proc</code>.
+</p>
+
+<%= bob_header 'Running Lambdas' %>
+<p class='commentable' id='lambda4'>
+  To execute the <code>Proc</code> object, run <code>call</code> method on its instance. The arguments of this method will be passed to the lambda. In the following example we run the anonymous function directly - <code>->(x) { x * x }.call(8)</code>. Interesting part comes later: we can assign the function to the variable - as we do with any object in Ruby. Now we are able to execute this function with <code>call</code> method:
+  <%= bob_code brush: :ruby do %>
+->(x) { x * x }.call(8)
+#=> 64
+
+square = ->(x) { x * x }
+#=> #&lt;Proc:0x007fd840993908@(irb):10 (lambda)&gt;
+square.call(10)
+#=> 100
+  <% end %>
+</p>
+
+<p class='commentable' id='lambda5'>
+  One of the most interesting properties of lambda functions is a possibility to pass it to the method as an argument. It is similar to block - blocks are indeed the anonymous functions passed to the methods with the special syntax. Lambdas are more flexible - you can pass as many of them as you want, no need to check if <code>block_given?</code>, etc. Consider the simple example: method <code>run</code> to execute lambda given as an argument:
+  <%= bob_code brush: :ruby do %>
+def run(function, argument)
+  function.call(argument)
+end
+run square, 16
+#=> 256
+
+double = ->(x) { x * 2 }
+run double, 16
+#=> 32
+  <% end %>
+</p>
+
+<p class='commentable' id='lambda6'>
+  Not a very sophisticated example, right. But the lambda functions do not have to be store in variables only. Let's put them into an Array and then let's run all the given functions one by one - first with the given argument, second with the return value of the first function and so on. The snippet below applies three function to the string: first <code>strip</code> to remove leading and trailing whitespaces, then <code>gsub</code> to remove all dots (replace all dots with empty string) and finally, <code>capitalize</code>. The result is the same as running <code>strip.gsub('.','').capitalize</code> methods on the given string:
+  <%= bob_code brush: :ruby do %>
+def run(functions, argument)
+  ret = argument
+  for f in functions
+    ret = f.call ret
+  end
+  return ret
+end
+
+run [->(x) {x.strip}, ->(x) {x.gsub('.','')}, ->(x) {x.capitalize}], " the quick brown fox."
+#=> "The quick brown fox"
+
+" the quick brown fox.".strip.gsub('.','').capitalize     # the same effect
+#=> "The quick brown fox"
+  <% end %>
+</p>
+
+<p class='commentable' id='lambda7'>
+  So why to bother with lambdas if we can have the same results using traditional methods? Notice that when we pass the Array with lambdas to the method, we can allow user to modify the Array content. He can choose which functions should be applied. 
+</p>
+
+<%= bob_header 'Real World Example: CSV' %>
+<p class='commentable' id='lambda-csv'>
+  After this boring theoretical part it is time for something closer to reality. Standard Ruby distribution includes a library for processing the Comma-Separated Values files (CSV) - the files with columns separated by comma and rows separated by the newlines. You probably dealed with it many times as Ordinary Users like to export them from MS Excel and give to administrators to process. Below is the simple CSV with two records, each containing three fields: the url, the company name and some number.
+  <%= bob_code brush: :plain do %>
+http://www.google.com,google,1
+http://www.bing.com,microsoft,2
+  <% end %>
+</p>
+
+<p class='commentable' id='lcsv2'>
+  Reading this file in Ruby is very easy - the <code>CSV::read</code> method reads the file and returns the coresponding matrix (an Array of Arrays).
+  <%= bob_code brush: :ruby do %>
+require 'csv'
+#=> true
+servers = CSV::read 'servers.csv'
+#=> [["http://www.google.com", "google", "1"], 
+#    ["http://www.bing.com", "microsoft", "2"]]
+  <% end %>
+</p>
+
+<p class='commentable' id='lscv3'>
+  Notice that the numbers appears as the string - by default CSV treats everything as a String. But in the most cases we want numbers to be Fixnum or Float. For this, we can use built-in converters - the functions which converts the value on the fly, while loading CSV file. There is a number of converters we can use; in this case let's apply <code>:integer</code> converter to cast all number to Fixnum:
+  <%= bob_code brush: :ruby do %>
+servers = CSV::read 'servers.csv', converters: :integer
+#=> [["http://www.google.com", "google", 1], 
+#    ["http://www.bing.com", "microsoft", 2]]
+  <% end %>
+</p>
+
+<%=bob_left_span%>
+<p class='commentable' id='lscv4'>
+  That was just a built-in converter. What are the others? We can find out in the documentation that all of them are kept in the Hash, <code>CSV::Converters</code>, where the key is a converter name and value is a lambda function which will be applied to the field. We can find out what converters are built-in by just displaying the content of the hash:
+</p>
+<%=bob_right_span%>
+<p>
+  <code>pp</code> stands for <em>pretty-print</em> and it is a method similar to <code>puts</code>, but it displays the standard Ruby objects, like Hashes or Arrays, more human-readable.
+</p>
+<%=bob_end_spans%>
+<p>
+  <%= bob_code brush: :ruby do %>
+CSV::Converters.keys
+#=> [:integer, :float, :numeric, :date, :date_time, :all]
+
+pp CSV::Converters
+{:integer=>
+  #&lt;Proc:0x007fefb3991fb0@/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/csv.rb:946 (lambda)&gt;,
+ :float=>
+  #&lt;Proc:0x007fefb3991f88@/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/csv.rb:949 (lambda)&gt;,
+ :numeric=>[:integer, :float],
+ :date=>
+  #&lt;Proc:0x007fefb3991f38@/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/csv.rb:953 (lambda)&gt;,
+ :date_time=>
+  #&lt;Proc:0x007fefb3991f10@/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/csv.rb:961 (lambda)&gt;,
+ :all=>[:date_time, :numeric]}
+  <% end %>
+</p>
+
+<p class='commentable' id='lcsv5'>
+  According to what is inside the <code>CSV::Converters</code> hash, we can take a look at the lambdas source code. For example, the <code>:integer</code> converter is in the file <code>csv.rb</code>, line number 946:
+  <%= bob_code brush: :ruby do %>
+Converters  = { integer:   lambda { |f|
+                Integer(f.encode(ConverterEncoding)) rescue f
+              }, 
+              ....
+  <% end %>
+</p>
+
+<p class='commentable' id='lcsv6'>
+  This lambda function returns Integer instance (because <code>Integer('42')</code> creates the number <code>42</code>) or, if the conversion went wrong, returns a value of the field itself (there will be an explanation what the <code>rescue</code> is in <%=bob_link_to_chapter 'Exceptions', 'the chapter about exceptions' %>).
+</p>
+
+<p class='commentable' id='lcsv7'>
+  The list of available convertes is not closed, we can extend it by creating our own one. The only thing is to build a lambda and assign it to the <code>CSV::Converters</code> hash. Assume we want to change the first letter of the companies to capital, but we do not want to capitalize the URLs.
+  <%= bob_code brush: :ruby do %>
+CSV::Converters[:capitalize] = lambda do |f|
+  if f.start_with? "http"
+    f               # return field itself if it is an URL
+  else
+    f.capitalize    # String#capitalize does the job
+  end
+end
+
+servers = CSV::read 'servers.csv', converters: [:integer, :capitalize]
+#=> [["http://www.google.com", "Google", 1], 
+#    ["http://www.bing.com", "Microsoft", 2]]
+  <% end %>
+</p>
+
+<p class='commentable' id='lcsv8'>
+  We just stored the lamba function in the Hash and passed it to <code>CSV::read</code> method. By the way, this method is flexible, so if you do not want to, you do not need to extend the <code>CSV::Convertes</code> hash, but pass the lambda directly as an argument. The next example is how to change all URLs to IP addresses. Notice that the Array passed to <code>CSV::read</code> contains now three elements: two Symbols used with <code>CSV::Converters</code> hash, and a variable which is bounded to the lambda function.
+  <%= bob_code brush: :ruby do %>
+require 'socket'   # needed to get IP from the hostname
+url_to_ip = lambda do |f|
+  if f.start_with? "http"
+    # remove 'http://' part from the string
+    # and then get IP address from it
+    IPSocket.getaddress f.gsub('http://', '')
+  else
+    f
+  end
+end
+
+servers = CSV::read 'servers.csv', converters: [:integer, :capitalize, url_to_ip]
+#=> [["173.194.65.99", "Google", 1], 
+#    ["204.79.197.200", "Microsoft", 2]]
+  <% end %>
+</p>
+
+<p>
+  There will be more about CSV in the chapter <%=bob_link_to_chapter 'Config files', 'Config Files' %>
+</p>
+

@@ -1,0 +1,22 @@
+<%= bob_header 'The Operating System' %>
+<p class='commentable' id="os">
+  This chapter covers practical topic: working with the Operating System. Working with files, file permissions, running the programs and getting the results, dealing with <code>stdin</code> and <code>stdout</code> and so on. 
+</p>
+<%= bob_header 'Files on Windows' %>
+<p>
+  All examples are working under Unix-like Operating Systems and most of them should work in Windows as well. Notice that Ruby shows the file path using slash regardless on which OS it is running. 
+  <%= bob_code brush: :ruby do %>
+Dir.pwd
+#=> "C:/Ruby200/bin"
+
+File.exists?("c:/windows/system32/drivers/etc/hosts")
+#=> true
+  <% end %>
+</p>
+<p>
+  It is good to use the combinations of the methods <code>Dir::pwd</code> and <code>File::join</code> to ensure that your code is not dependent on the OS:
+  <%= bob_code brush: :ruby do %>
+File.join(Dir.pwd, "ruby.exe")
+#=> "C:/Ruby200/bin/ruby.exe"
+  <% end %>
+</p>

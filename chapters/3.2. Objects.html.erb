@@ -1,0 +1,251 @@
+<%= bob_header 'Overview' %>
+<p class='commentable' id="general">
+  In general, object is the a structure with its own properties (it can carry the data which represents and describes the object) and methods (functions or procedures associated with the object). For example, you may want to have object <code>Server</code>, represents the machine in the network you manage. In this case, this object is a model of reality: it represents the physical box standing deep in the vault of your server room. Such object may contain data fields like <code>name</code>, <code>domain</code> and methods like <code>get_ip</code> (the function returning IP of the machine, based on name and domain). Notice there is no need to pass the server name and domain to <code>get_ip</code> method, because the method itself has an access to the object properties. 
+</p>
+<%= bob_header 'Classes' %>
+<p class='commentable' id="class1">
+  Object must have the defnition - it is called the <strong>class</strong>. You may think about the class as a <strong>type of the object</strong>. In Ruby class is a contant, so must begin with uppercase letter and, by convention, it is good to use CamelCase for class names.
+  <%= bob_left_span %>
+    <%= bob_code filename: '3.2.server_object.rb' %>
+  <%= bob_right_span %>
+    <p>
+      <em>The class contains only one method. Note the <code>get_ip</code> is a mock method for now, it returns constant string, not the proper IP address.</em>
+    </p>
+  <%= bob_end_spans %>
+</p>
+<p class='commentable' id="class2">
+  In Ruby, there is no need to define class in one piece. You can extend definition of a class wherever you want, just remember that new method definition overwrites the previous one.
+  <%= bob_left_span %>
+       <%= bob_code filename: '3.2.server_object_2.rb' %>
+  <%= bob_right_span %>
+      <p>
+        <em>This code defines class Server with three methods: <code>get_ip</code>, <code>domain</code> and <code>name</code>. Method <code>name</code> will return 'unknown name' string, as this version was defined later and overwrites the definition from lines 5 - 7.</em>
+      </p>
+  <%= bob_end_spans %>
+</p>
+
+<%= bob_header "Instance" %>
+<p class='commentable' id="instance">
+  If Server is something like a type, can we create a variable with this type? First, we need to allocate the memory for the object and create an object there. This representation in the memory is called the <strong>instance</strong> of the object, and the process of constructing it by language interpreter is called <strong>object creation</strong>. To create a new, empty instance and assign it to variable we can use the class method called <code>new</code>:
+  <%= bob_code brush: :ruby do %>
+server = Server.new()
+  <% end %>
+</p>
+
+<%= bob_header 'Class Definitions in Irb' %>
+<p class='commentable' id="irb">
+  For practice and debug, you can write a script, run it and observe the result. But you can use Irb as well - it is possible to define class or methods directly there:
+  <%= bob_code brush: :ruby do %>
+class Server
+  def get_ip
+    'unknown ip'
+  end
+end
+#=> nil
+server = Server.new
+#=> #&lt;Server:0x007fc6bc1d4978&gt;
+server.get_ip
+#=> "unknown ip"
+  <% end %>
+</p>
+<p>
+  Notice that <code>irb</code> is changing the continuation level number in a prompt (the last number), to help you remember you are inside a definition of class or a method.
+</p>
+<p class='commentable' id="irb-load">
+  Another way to debug a script is to load it to Irb. To do it, use <code>load</code> command - this will run the given file, so every definition of classes, methods, variables will be accessible from Irb session.
+  <%= bob_code brush: :ruby do %>
+load 'server_object.rb'
+#=> true
+server = Server.new
+#=> #&lt;Server:0x007fb76bb0a548&gt;
+server.get_ip
+#=> "unknown IP"
+  <% end %>  
+</p>
+<p class='commentable' id="value1">
+  When you check the value of <code>server</code> variable in Irb, it will show human readable representation of the instance, such like <code>#&lt;Server:0x007fb76bb0a548&gt;</code>. This is the object's class name with the instance identifier (hexadecimal representation of the memory address). 
+</p>
+
+<%= bob_header 'Instance variables' %>
+<p class='commentable' id="varialbles1">
+  For now, we defined the <code>Server</code> object with only few methods: it is not storing any data in it. The purpose of the object is to represent (to model) the real world. Real servers have some properties like the name and the domain. Such information should be stored in the <strong>instance variable</strong>, so every instance of Server class can have its own name properties. Instance variables syntax is the same as normal, local variables: lowercase, snake_case symbol but followed by character <code>@</code>. In the example below there are two new methods to set server name and server address:
+  <%= bob_left_span %>
+        <%= bob_code filename: '3.2.instance_variables.rb' %>
+  <%= bob_right_span %>
+      <p>
+        <em>
+          Methods to set and get instance variables are called <u>setters</u> and <u>getters</u>. 
+        </em>
+      </p>
+  <%= bob_end_spans %>
+</p>
+<p class='commentable' id="variables2">
+  Try to construct an object with instance properties in Irb. When you inspect it, you will see the representation of the object changed. You will get now something like <code>#&lt;Server:0x007fc688e2ebd0 @name="vader", @domain=".starwars.com"&gt;</code> - it is showing the instance variable content for better readability.
+</p>
+<p class='commentable' id="setters">
+  Setters and getters like above are not very elegant. It would be much better to just have a direct access to instance variable, to set its value with <code>server.name = 'vader'</code> and get it with simple <code>server.name</code>. In Ruby there is no direct access to the instance variables, but why not to write the setters and getters in more readable format:
+  <%= bob_code filename: '3.2.setters_getters.rb' %>
+</p>
+<p class='commentable' id="setters-again">
+  It looks like a direct access to object properties, but it is not - when calling <code>object.some_method = ...</code> Ruby invokes method called <code>some_method=</code>, the one with equal sign at the end. For getter, it is much easier: the method name is just the same as the instance variable name.
+</p>
+<%= bob_header 'attr_accessor, attr_writter and attr_reader' %>
+<p class='commentable' id="attr">
+  In a big projects writing getters and setters for every instance variable in the way like above might be quite boring. Why don't let Ruby do it for us? There are special functions for creating setters and getters for the given variable names: <code>attr_writter</code> creates the setter, <code>attr_reader</code> produces a getter and <code>attr_accessor</code> - both setter and getter.
+  <%= bob_left_span %>
+    <%= bob_code filename: '3.2.attr_accessor.rb' %>
+  <%= bob_right_span %>
+    <p>
+      <em>
+        <code>attr_*</code> methods are taking the list of variable names as the arguments. You can give this name as a string (like 'name' in the example), but much better is to use Ruby symbols. Symbols are the kind of strings, written with colon at the beggining (<code>:name</code> in the example), but unlike the strings they are not mutable - you can't change it. They are commonly used to pass the method names, variable named etc.
+      </em>
+    </p>
+  <%= bob_end_spans %>
+
+<%= bob_header 'Instance Constructor' %>
+<p class='commentable' id="constructor">
+  We now know how to create a new instance with <code>new</code> class method. It is possible to control the object creation code: if Ruby found a method called <code>initialize</code> it lauches it while creating an object. In the example below the instance variables are set to default values while constructing an object:
+  <%= bob_code filename: '3.2.initialize.rb' %>
+</p>
+<p class='commentable' id="constructor-args">
+  You can pass the arguments to <code>new</code> class method - Ruby will pass them to the <code>initialize</code> instance method. This is commonly use for passing the initialization values for the class variables. Notice that the number of arguments in <code>new</code> must equal the number of arguments in <code>initialize</code>:
+  <%= bob_code filename: '3.2.initialize_args.rb' %>
+</p>
+
+<%= bob_header 'Class Methods and Variables' %>
+<p class='commentable' id="class-methods">
+  So far we have created the <strong>instance methods</strong>, which are functions running on object instance, having an access to all its properties - but only in the scope of the current object. <strong>Class methods</strong> are different - they are running on the class, not on the object instance, and they do not need any instance initialized. You know one of the class method - the object constructor, <code>new</code>. It is invoked on the class, like <code>Server.new</code>. This method must be a class method - before the first initialization with <code>new</code> there is no instance to run the function on. To define class method, use <code>self.</code> syntax before method name.<br>
+  Class variables are like the instance variables, but with the scope on the class, not on the specific object. That means all of the objects of specific class have an access to this values - it is shared between them. Class variables are defined with double 'at' symbol <code>@@</code> before the variable name.<br>
+  Class methods are commonly used for object initialization, besides <code>Object.new</code> there are many of this kind, for example <code>File.open(filename)</code> which creates an object representing the file with the given path. Class variables might be useful when you need to do something on all the object of a kind, for example to count all defined servers:
+  <%= bob_code filename: '3.2.class_methods.rb', highlight_lines: [2, 8, 11, 12, 13] %>
+</p>
+
+<%= bob_header 'Self' %>
+<p class='commentable' id="mysefl">
+  <code>self</code> is a keyword to represent a current object instance. You can use it in the class definition to access the instance itself. In the example below, method <code>url</code> calls the method <code>full_name</code> on the same object.
+  <%= bob_code filename: '3.2.self.rb' %>
+</p>
+<p class='commentable' id="myself2">
+  Just to call the method in the example above you may skip the <code>self</code> keyword. Ruby is searching for a method in the current object instance first, so this will work as well:
+  <%= bob_code brush: :ruby do %>
+def url
+  'http://' + full_name
+end
+  <% end %>
+</p>
+
+<%= bob_header 'Object Inheritance' %>
+<p class='commentable' id="inherit1">
+  Inheritance is a very important concept in the object-oriented programming. When the class (we will call it subclass) <strong>inherits</strong> another class (called superclass or ancestor), it is getting the whole structure of the parent class, all the code: variables, methods etc. This provides the class hierarchy, where most general classes are at the top, and the detailed ones  at the bottom of hierarchy tree. <br>
+  The syntax for inheritance in Ruby is <code>class SubClassName &lt; SuperClassName</code>.<br>
+  Assume we want to have two new classes, adding more details to our servers model. We can create two classes, <code>WindowsServer</code> and <code>UnixServer</code>, which we want to behave the same as a general Server class:
+  <%= bob_code filename: '3.2.inheritance.rb' %>
+</p>
+<p class='commentable' id="inherit2">
+  Lines 1 - 9 provides us the well know implementation of the <code>Server</code> object. Then comes the definition of <code>WindowsServer</code> class comes, which is a subclass of the <code>Server</code>. That means this class now have the same implementation like its superclass - it has the same methods and variables like the <code>Server</code>. So we can create it with arguments (line 20) just like the <code>Server</code>, run the method from the superclass (line 24) - all of this code <code>WindowsServer</code> inherits from the ancestor. <br>
+  The similar is for <code>UnixServer</code> class - it has all the methods and variables inherited from <code>Server</code>. In addition, this class have one more instance method - <code>execute_via_ssh</code> (now it is not doing nothing, except the nasty information). You can call this method, but only on <code>UnixServer</code> object! It is not available in objects of <code>WindowsServer</code> or even <code>Server</code> class.
+</p>
+<p>
+  The method from the superclass can be overwritten in the subclass. For example, you may want to change behaviour of the <code>full_name</code> method - in case it is Windows server, you want to be the server name only, without a domain, upper-case.
+  <%= bob_left_span %>
+    <%= bob_code filename: '3.2.overwritting.rb' %>
+  <%= bob_right_span %>
+    <p>
+      <em>
+        <code>upcase</code> is an instance method of String object to change all the characters of the string to uppercase.
+      </em>
+    </p>
+  <%= bob_end_spans %>
+</p>
+<p class='commentable' id="inherit-search">
+  Ruby searches for a method first in the current object and only when not found the interpreter start searching in the superclasses. So after the changes above the method gives the desired server name for <code>WindowsServer</code> object: 
+  <%= bob_code brush: :ruby do %>
+irb(main):025:0> win = WindowsServer.new('yoda', '.starwars.com')
+#=>#&lt;WindowsServer:0x007fb83a0c7318 @name="yoda", @domain=".starwars.com"&gt;
+irb(main):027:0> win.full_name
+#=>"YODA"
+  <% end %>
+</p>
+<p class='commentable' id="inherit-summary">
+  Inheritance (and similar techniques, like mixins) is really important in Ruby. Remember the method <code>new</code> to create a new instance? It magically appears in the newly defined <code>Server</code> class. Well, this particular method comes from <code>Class</code> class. Refer to following documentation <%=bob_link_to 'http://ruby-doc.org/core-2.0.0/Class.html' %> to learn more.
+</p>
+
+<%= bob_header 'Object Operators' %>
+<p class='commentable' id="operators">
+  In Ruby, most operators are actually the method calls on the objects. Thus <code>a + b</code> means run the method called <code>+</code> on object <code>a</code> with argument <code>b</code> - this is another way to write <code>a.+(b)</code> or <code>a.+ b</code>. You can try it in Irb, instead of typing <code>2 + 2</code> you can calculate this by directly calling the method <code>+</code> on object instance <code>2</code> with the argument of object instance <code>2</code>: <code>2.+(2)</code>. It works!<br>
+  Sometimes the operator does not makes sense for the specified kind of object. We can add numbers, strings (to concatenate), but we cannot add servers one to each other. Thats why we need to find out another operator to play with the examples. Lets discuss the equality operator <code>==</code>. Can we check if two servers are equal? Yes, if the servers have the same name and domain, they must be the same machines. By default, we have the <code>==</code> defined for every object, but it does not work as we expect:
+  <%= bob_code brush: :ruby do %>
+server1 = Server.new('yoda','.starwars.com')
+#=> #&lt;Server:0x007fdf22830af0 @name="yoda", @domain=".starwars.com">
+server2 = Server.new('yoda','.starwars.com')
+#=> #&lt;Server:0x007fdf219f34d8 @name="yoda", @domain=".starwars.com">
+server1 == server2
+#=> false
+  <% end %>
+</p>
+<p class='commentable' id="opers2">
+  This is because we defined two object instances and, from the Ruby point of view, these are a different constructs. Just observe the identificator (the memory address) of <code>server1</code> and <code>server2</code>. To fix this behaviour it is time to override the equality operator:
+  <%= bob_code '3.2.operator.rb' %>
+</p>
+<p class='commentable' id="opers3">
+  Line 7 defines operator as an instance method on object <code>Server</code>. It is the only one line of code (line 8), which means: "return true if my name equals the other name AND if my domain equals the other domain". In this line operator <code>==</code> checks equality of String objects (@name and @domain are the character strings). To better understanding, we can write this line in different way: <code>(self.name == other.name) && (self.domain == other.domain)</code> or with if-then-else statement:
+  <%= bob_code brush: :ruby do %>
+if name == other.name && domain == other.domain
+  return true
+else
+  return false
+end
+  <% end %>
+<p>
+  But because the method always returns the value of the last statement, there is no need to bother with if-then-else. Simplicity first!
+</p>
+
+<%= bob_header 'Inspect' %>
+<p class='commentable' id="inspect">
+  By default objects in <code>irb</code> are shown by the class name, the instance identifier (the unique identifier for all objects) and the instance variables, if any. This is quite handy, but we can do better. To show this value, <code>irb</code> runs method <code>inspect</code> on the specified instance. If you define your own, you can output better human-readable description of the object. In this case, we want our Server object to be shown as <code>* [class name]: [server and domain] *</code>
+  <%= bob_code brush: :ruby do %>
+server = Server.new('yoda', '.starwars.com')
+#=> #&lt;Server:0x007ff231124fa0 @name="yoda", @domain=".starwars.com"&gt;   # default inspect value
+class Server
+  def inspect                                              # our own inspect
+    "* " + self.class.to_s + ": " + @name + @domain + " *" # * [class name]: [server and domain] *
+  end
+end
+server
+#=> * Server: yoda.starwars.com *          # works as expected!
+  <% end %>
+</p>
+
+<%= bob_header 'Hacking the Math' %>
+<p class='commentable' id="hackthemath1">
+  At the end of this long and boring chapter, let's have some fun! Who said that "2 + 2" must always give "4"? Well, by default, Ruby claims it is "4":
+  <%= bob_code brush: :ruby do %>
+2 + 2
+#=> 4
+  <% end %>
+</p>
+<p class='commentable' id="hasck2">
+  But as we said, everything in Ruby is an object and have its class. Number 2 is an instance of class <class>Fixnum</class>.
+  <%= bob_code brush: :ruby do %>
+2.class
+#=> Fixnum
+  <% end %>
+</p>
+<p class='commentable' id="hack3">
+  So why not to redefine the <code>+</code> operator, which is in fact the instance method on <code>Fixnum</code> class.
+  <%= bob_code brush: :ruby do %>
+class Fixnum
+  def +(other)
+    42
+  end
+end
+  <% end %>
+</p>
+<p class='commentable' id="hack4">
+  Voila! What is the result of "2 + 2" now? 
+  <%= bob_code brush: :ruby do %>
+2 + 2
+#=> 42
+  <% end %>
+</p>
+

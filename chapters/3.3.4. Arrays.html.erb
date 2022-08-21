@@ -1,0 +1,172 @@
+<%= bob_header 'Arrays' %>
+<p class='commentable' id="arraya">
+  Arrays are the ordered collections of objects. Ordered means that in the array every object have its index - the integer number counting from zero (so the first element in the array have the index 0, the second one - 1, etc). In Ruby there is no requirement to have all elements of the same type: you can mix the object, so have numbers, strings, <code>Server</code> objects in the same collection, but in this case some methods will not work - for example you cannot sort such array, becase there is no way to compare number with <code>Server</code> object.<br>
+  To create an empty array, use <code>Array.new</code> class method or <code>[]</code>. To fill the collection with initial values, put them inside the brackets and separate it by commas:
+  <%= bob_code brush: :ruby do %>
+Array.new
+#=> []           # [] is the representation of an empty array
+a = ['one', 'two', 3, 4, 'five']
+#=> ["one", "two", 3, 4, "five"]
+  <%  end %>
+</p>
+<%= bob_header 'Array as a Stack' %>
+<p class='commentable' id="stackaya">
+  To add an object to the end of the array use <code>push</code> method, and to get the last object (and shrinks the array by one) - <code>pop</code> function. With this two methods you can use the array as a stack.
+  <%= bob_code brush: :ruby do %>
+a = ['one', 'two', 3, 4, 'five']
+
+a.push 'six'       # push to add element at the end of the array
+#=> ["one", "two", 3, 4, "five", "six"]
+
+a.pop              # pop to take the last element
+#=> "six"
+
+a.pop              # taking the last element again
+#=> "five"
+
+a                  # array is shrinked, because we push 1 element and pop 2 of them
+#=> ["one", "two", 3, 4]
+  <%  end %>
+</p>
+
+<%= bob_header 'Accessing Objects' %>
+<p class='commentable' id="accessing">
+  There is a number of methods to access the desired objects in the array. The most common is tu use square brackets <code>[]</code>. If there is only one argument given, it just returns the requested object. The second argument is the number of objects to return, so in case it is presents, returns Array (a list of objects). <strong>Remember the indices counts from zero</strong>. The first argument can be negative - in this case -1 means the last element, -2 second from the end, etc. <strong>Returns <code>nil</code> if the index is out of range</strong>.
+  <%= bob_code brush: :ruby do %>
+a = ['one', 'two', 3, 4, 'five']
+
+a.[](1)      # running method [] with argument 1 on object a
+#=> "two"
+
+a[1]         # alternate syntax to call method []
+#=> "two"
+
+a[1,1]       # second argument given - give me the array of 1 element starting from index 1
+#=> ["two"]      # note the result is not the same as fo a[1] - this returns 1-element array
+
+a[1,2]       # give me the subarray, starting from index number 1, with 2 elements
+#=> ["two", 3]   
+
+a[-1]        # last elements
+#=> 4
+
+a[42]        # index out of range, returns nil
+#=> nil
+  <% end %>
+</p>
+<p class='commentable' id="more-methods">
+  There more methods on Array objects. <code>length</code> returns the number of elements, <code>first</code> is the equivalent to <code>[0]</code>, <code>last</code> returns last object - just like <code>[-1]</code>. Method <code>empty?</code> returns true only when the array contains no elements. <code>find_index</code> searches the whole array and returns the index of the first found object (array does not have to contain unique objects). To find all the objects with a given patters, use <code>grep</code>. 
+  <%= bob_code brush: :ruby do %>
+a = ['one', 'two', 3, 4, 'five']
+
+a.length
+#=> 4
+
+a.first
+#=> "one"
+
+a.last
+#=> 4
+
+a.find_index 'two'   # search for the string 'two'
+#=> 1                    # and returns the position of nil when not found
+
+a.empty?
+#=> false
+
+['foo', 'bar', 'foobar', 3.14].grep(/^foo.*/)  # /^foo.*/ is the Regular Expression, 
+#=> ["foo", "foobar"]                              # means: everything begins with string 'foo'
+  <%  end %>
+</p>
+<%= bob_header 'Modifying Array Content' %>
+<p class='commentable' id="modify-content">
+  Array modification is quite easy as well. To update the array simply assign the new value of the given array element:
+  <%= bob_code brush: :ruby do %>
+a = ['one', 'two', 3, 4, 'five']
+
+a[0] = 1
+#=> 1
+a
+#=> [1, "two", 3, 4]
+  <%  end %>
+</p>
+<p class='commentable' id="delete">
+  <code>delete_at</code> is the method to remove object at th given index
+  <%= bob_code brush: :ruby do %>
+a = ['foo', 'bar', 'foobar', 3.14]
+#=> ["foo", "bar", "foobar", 3.14]
+
+a.delete_at 0            # notice that delete is not returning a new array, but the object
+#=> "foo"
+
+a
+#=> ["bar", "foobar", 3.14]  # everything except first object
+
+a.delete_at 7            # delete_at returns nil, when the index is out of range
+#=> nil
+  <%  end %>
+</p>
+<p class='commentable' id="seek-and-destroy">
+  To find the objects to be destroyed, use <code>delete</code> method:
+  <%= bob_code brush: :ruby do %>
+a = ['foo', 'bar', 'foobar', 3.14, 'foo']
+#=> ["foo", "bar", "foobar", 3.14, "foo"]
+
+a.delete('foo')           # notice that delete is not returning a new array, but the found object
+#=> "foo"
+
+a
+#=> ["bar", "foobar", 3.14]   # array now contains everything except found 'foo'
+
+a.delete('foo')           # if not found, delete returns nil
+#=> nil
+  <%  end %>
+</p>
+
+<%= bob_header 'Array Operators' %>
+<p class='commentable' id="array-opers">
+  There are some operators defined on Array class. You can combine two arrays with plus operator <code>+</code>, subtract them using minus <code>-</code> (the result is the array contains all object from the first array which does not exist in the second one), or add the elements to the end of the array with operator <code><<</code>. One array is equal to the other one if all the objects are equal and the sizes are equal.
+  <%= bob_code brush: :ruby do %>
+[1, 2] + [3, 4]            # adding arrays
+#=> [1, 2, 3, 4]
+
+[1, 2, 3, 4, 1] - [1, 3]   # subtracting arrays
+#=> [2, 4]                     
+
+[1, 2] << 3                # add single element to the end
+#=> [1, 2, 3]
+
+[1, 2] == [1.0, 2]         # true, because 1 == 1.0 and 2 == 2
+#=> true
+
+[1, 2] == [1, 2, 3]        # false, the arrays are not equal because the second one is larger
+#=> false
+  <%  end %>
+</p>
+
+<%= bob_header 'Array Syntax Shortcut' %>
+<p class='commentable' id="syntax-shortcut">
+  For your convenience Ruby provide shortcut for arrays of strings. You do not have to bother with writing all elements in apostrophes, separating them with commas - use <code>%w</code> shortcut and separate the strings with spaces, tabs or newlines:
+  <%= bob_code brush: :ruby do %>
+days = %w{ monday tuesday wednesday thursday friday saturday sunday }
+#=> ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+  <%  end %>
+</p>
+
+<%= bob_header 'Sorting' %>
+<p class='commentable' id="sorting">
+  To sort an array, use <code>sort</code> method, to get only unique values use <code>uniq</code> function. <code>uniq</code> only removes duplicated values, so you must use the both methods to get the array sorted with only unique object. Notice that for the perfomance reasons it is better to first get unique values and then to sort the result (because <code>uniq</code> returns array with elements removes, <code>sort</code> has less elements to process).
+  <%= bob_code brush: :ruby do %>
+[1, 3, 2, -1, 3].sort
+#=> [-1, 1, 2, 3, 3]
+
+[1, 3, 2, -1, 3].uniq
+#=> [1, 3, 2, -1]
+
+[1, 3, 2, -1, 3].sort.uniq  # first do sort, then uniq
+#=> [-1, 1, 2, 3]
+
+[1, 3, 2, -1, 3].uniq.sort  # the same, but faster: first get unique values, then sort the smaller array
+#=> [-1, 1, 2, 3]
+  <%  end %>
+</p>

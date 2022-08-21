@@ -1,0 +1,64 @@
+<%= bob_header 'What is REPL?' %>
+<p class='commentable' id="repl">
+  REPL - an abbreviation of <em>read-eval-print loop</em> - is the interactive tool, specific to interpreted programming languages, which reads the input from the <code>stdin</code>, evaluates it and prints the value to the <code>stdout</code>. You may think the <strong>REPL is a kind of shell for Ruby</strong>, but there is a difference - Unix Shell gets the command, evaluate it but it is not printing the returned value to the <code>stdout</code>. Instead of this, it is keeping it in <code>$?</code> environment variable. 
+</p>
+<%= bob_header 'Irb' %>
+
+  <%= bob_left_span %>
+    <p>
+      In Ruby, REPL is called <code>irb</code> - for <em>Interactive RuBy</em>. Inside <code>irb</code> you can launch any ruby command you want, assign variables, define functions, classes, redefine standard Ruby classes - but all the changes will last only with the current <code>irb</code> session. You can treat <code>irb</code> like the Ruby shell: trying out your code, quick testing the functions, learning Ruby. You will spend a lot of time with <code>irb</code>, so get familiar with it!
+    </p>
+  <%= bob_right_span %>
+    <p>
+      <em>
+        <u>irb</u> is not the only REPL available for Ruby. Very interesting option is <u>pry</u>, which has many advanced features, like code browsing, great syntax highlighting, editing. For more information, go to the Github: <%=bob_link_to 'https://github.com/pry/pry'%>.
+      </em>
+    </p>
+  <%= bob_end_spans %>
+<p class='commentable' id="irb">
+  To run it, launch <code>irb</code> from the shell. To exit, use <kbd>Ctrl</kbd> + <kbd>D</kbd> or type <code>exit</code>. Below is the example of the REPL session in Ruby:
+  <%= bob_code filename: '2.3.irb_session_1.rb', highlight_lines: [2,5,7,9,11] %>
+</p>
+<%= bob_header 'Irb prompt' %>
+<p class='commentable' id="prompt">
+  Like in the Shell, there is a prompt <code>irb(main):001:0></code> displayed before every keyboard input. Prompt can be changed or even removed. Default prompt contains valuable information: command name, the main object, line number in the current session and indent level.
+</p>
+<p class='commentable' id="prompt2">
+  In all examples in this book IRB prompt is disabled (changed to an empty string), and return value will start with <code>#=> </code>. This is a standard in Ruby documentation (see chapter <%=bob_link_to_chapter("Getting Help", "Getting Help")%>) and makes copy/paste easier. 
+</p>
+<%= bob_code brush: :ruby do %>
+6 * 7
+#=> 42
+x = 6 * 7
+#=> 42
+x
+#=> 42
+<% end %>
+
+<%= bob_header 'Evalutating Expressions and Returning Values' %>
+<p class='commentable' id="eval">
+  When you type the command, REPL evaluates it and prints its return value followed by arrow <code>=></code>. This means that the result of <code>puts 'Hello, world'</code> is <code>nil</code> (<code>nil</code> is a special Ruby object, which means <em>nothing</em>). Similar the result of multiplication <code>6 * 7</code> is <code>42</code>, the return value of assigment a value to the variable <code>x</code> is this value, and the result of evaluation previously assigned variable <code>x</code> is its value. <strong>In Ruby, everything returns value</strong>.
+</p>
+  <%= bob_left_span %>
+    <p>
+      If <code>puts</code> returns <code>nil</code>, how can we see the "Hello, world" string in <code>irb</code> session? Note the string is coming before the return value - it appears while evalutating the command. When processing <code>puts</code> method, Ruby prints the string to the <code>stdout</code>, but do not return it. Treating <code>puts</code> as a function, it always returns <code>nil</code>, and the displayed string is a <strong>side effect</strong>.
+    </p>
+  <%= bob_right_span %>
+    <p>
+      <em>
+        The function has a <u>side effects</u>, when in addition to returning value it is also modifing a state of something or it is doing an interaction with outside world. Input and output, manipulating the files - this are the side effects.
+      </em>
+    </p>
+  <%= bob_end_spans %>
+<%= bob_header 'Customizing Irb' %>
+<p>
+  To view the current configuration, type in <code>conf</code> command:
+  <%= bob_code filename: '2.3.irb_conf.rb' %>
+</p>
+<p>
+  On start <code>irb</code> is looking for following files in the given order:  <code>$HOME/.irbrc, .irbrc, irb.rc, _irbrc, $irbrc</code> and, when found, loads initialization from it. There are few customizations which makes life with <code>irb</code> easier, two of them are shown in the below example <code>.irbrc</code> file:
+  <%= bob_code filename: '2.3.irbrc.rb' %>
+</p>
+<p class='commentable' id="irbrc">
+  We will take a look on <code>require</code> command later, for now you should know that it is used for loading the additional Ruby files or libraries. The first library is 'pp' - from 'pretty print'. It gives you an alternative to <code>puts</code> command, formatting Ruby object like Arrays or Hashes prettier and more human-readable than default. The second one, 'irb/ext/save-history' is an extention to <code>irb</code> which gives you a possibility to save the history to the file, so in the next session you can recall the previous commands with up arrow - in the same way like in bash or zsh. Next lines configure the number of entries in a history file: <code>IRB.conf[:SAVE_HISTORY]</code> and the location of file itself: </code>IRB.conf[:HISTORY_FILE] = "~/.irb_history"</code>. 
+</p>

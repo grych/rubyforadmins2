@@ -1,0 +1,83 @@
+<%= bob_header 'Date/Time' %>
+<p class='commentable' id="datetime">
+  Another very handy and widely used object is <code>Time</code>, which contains date and time. It depends on operating system how this object is represented: in Unix, as you probably know well, the time is the number of seconds since 1st of January 1970. Using Ruby you do not have to worry about the dates before 1970 (they are represented by the negative integer) and after 2038.<br>
+  To get the current time, use <code>Time.now</code> class method. You can add and substract the seconds from the time object to represent future or past:
+  <%= bob_code brush: :ruby do %>
+time = Time.now
+#=> 2014-06-13 21:05:19 +0200  # the default representation of time, date + time + timezone
+
+time + 60                  # one minute later
+#=> 2014-06-13 21:06:19 +0200
+
+time - 60*60*24*365 * 50   # fifty years before (well, not exactly, because not every year is 365 days long)
+#=> 1964-06-25 20:05:19 +0100
+  <%  end %>
+</p>
+<%= bob_header 'Date/Time Formatting' %>
+<p class='commentable' id="formatting">
+  Default representatation of time is quite readable for humans, but sometimes you need another formatting. To format date/time with user-defined pattern, use <code>strftime</code> method with specified pattern, where <code>%Y</code> means year, <code>%m</code> - month, <code>%d</code> - day, etc. You can find exact description of the time pattern in the documentation <code>ri Time.strftime</code>. To extract the parts of the date/time use <code>time.year</code>, <code>time.month</code> or <code>time.day</code> instance methods. Finally, to convert date/time to Unix representation - the number of seconds - use <code>to_i</code>. <br>
+  Notice that you must load additional library by <code>require 'time'</code> to use some methods described above.
+  <%= bob_code brush: :ruby do %>
+require 'time'                 # load additional date/time helper methods
+#=> true
+
+time.year                      # returns integer with year
+#=> 2014
+
+time.iso8601                   # converts date/time to string according to iso-8601 standard
+#=> "2014-06-13T21:05:19+02:00"
+
+time.httpdate                  # httpdate represents the date/time in format used by http protocol
+#=> "Fri, 13 Jun 2014 19:05:19 GMT"
+
+time.strftime('Today is %A, %B %e, %l:%M:%S %p and %3N miliseconds')
+#=> "Today is Friday, June 13,  9:05:19 PM and 775 miliseconds"
+
+time.to_i                      # Unix number of seconds since the Big Bang
+#=> 1402686319
+  <%  end %>
+</p>
+<%= bob_header 'Creating Date/Time Object' %>
+<p class='commentable' id="datetime-create">
+  To create a new date/time instance with specified time, use constructor <code>Time.new</code> with year, month, day, hour, minute and second as arguments. You can ommit some parts, for example give only year, month and date, like <code>Time.new(2014, 6, 13)</code>. You can also convert the Unix number of seconds to date/time object, using <code>Time.at</code> class method.
+  <%= bob_code brush: :ruby do %>
+Time.new(2014, 6, 13)      # just the date, do not care about time
+#=> 2014-06-13 00:00:00 +0200
+
+Time.new(2014, 6, 13, 22)  # the same date at 22:00:00
+#=> 2014-06-13 22:00:00 +0200
+
+Time.at(1402686319)        # today
+#=> 2014-06-13 21:05:19 +0200
+
+Time.at(0)                 # at the beginning of epoch
+#=> 1970-01-01 01:00:00 +0100
+  <%  end %>
+</p>
+
+<%= bob_header 'Parsing Date/Time from the String' %>
+<p class='commentable' id="parsing">
+  It is very common in Sysadmin work to parse some logs and get the date and time from there. In Ruby there is a sophisticated class method <code>Time.parse</code> to parse a given string and return date/time object. It is raising an exception when it cannot pare it properly.
+  <%= bob_code brush: :ruby do %>
+require 'time'                              # load time helper methods
+#=> true
+
+Time.parse('2014-06-13')                    # simple to parse
+#=> 2014-06-13 00:00:00 +0200
+
+Time.parse('2014-06-13 22:13')              # with given hour and minutes
+#=> 2014-06-13 22:13:00 +0200
+
+Time.parse('12:00')                         # when only time give, default date is today
+#=> 2014-06-13 12:00:00 +0200
+
+Time.parse('Friday, June 13, 22:13:13')     # more sophisticated parsing
+#=> 2014-06-13 22:13:13 +0200
+
+Time.parse("Fri, 13 Jun 2014 19:05:19 GMT") # http protocol standard
+#=> 2014-06-13 21:05:19 +0200
+
+Time.parse("Captain's log, stardate 41153.7. Our destination is planet Deneb IV...")
+#=> 2014-06-13 04:11:53 +0200                   # but it is not parsing non-standard time correctly...
+  <%  end %>
+</p>

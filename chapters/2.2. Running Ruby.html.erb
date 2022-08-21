@@ -1,0 +1,76 @@
+<p>
+  Ruby is the interpreted language, so there is no need to compile your program before running. Just like in a shell, you can create a script or run the command you want to from the ruby executable command line. We will start with the famous <em>Hello, world</em> program.
+</p>
+<%= bob_header 'One-Liners in Ruby' %>
+<p>
+  To run a command in ruby, use <code>-e</code> command line switch:
+  <%= bob_code brush: :shell do %>
+$ ruby -e 'puts "Hello, world."'
+Hello, world.
+  <% end %>
+  Or send the code to the <code>stdin</code> of ruby executable: 
+  <%= bob_code brush: :shell do %>
+$ echo 'puts "Hello, world."' | ruby
+Hello, world.
+  <% end %>
+</p>
+<p class='commentable' id="oneliner">
+  <code>puts</code> (stands for: put string) is an equivalent to <code>echo</code> in Shell scripting: this is a function which sends the given text string to <code>stdout</code>.
+</p>
+<p>
+  While running one-liner you can pass the command line arguments to your program. In the example below the argument is just one - a text string 'JanB', but of course you can have as many arguments as you want.
+  <%= bob_code brush: :shell do %>
+$ ruby -e 'puts "Hello, " + ARGV.first + "."' JanB
+Hello, JanB.
+  <% end %>
+</p>
+<p class='commentable' id="argv">
+  <code>ARGV</code> is an array with all the command line arguments passed to ruby program. When no arguments are given, this array will be empty (but still exists). In our case, <code>ARGV</code> has only one element, text string 'JanB'. Method <code>first</code> called on the array returns, as you probably guess, the first item of collection. Adding two string one to another using the plus sign concatenates them, for example: <code>"1" + "2"</code> gives <code>"12"</code>.
+</p>
+<%= bob_header 'Scripting' %>
+<p>
+  To create a script, prepare a file called <code>hello_world.rb</code> (.rb is well-know extention for Ruby programs, but it is of course not mandatory) with your favourite emacs or vi:
+  <%= bob_code filename: '2.2.hello_world_1.rb' %>
+</p>
+<p>
+  And you can run it now:
+  <%= bob_code do %>
+$ ruby hello_world.rb
+Hello, world.
+  <% end %>
+</p>
+<p>
+  Passing the arguments is easy, just the same as in one-liner above. In <code>hello_world.rb</code>, type:
+  <%= bob_code filename: '2.2.hello_world_2.rb' %>
+</p>
+<p>
+  And run it with argument:
+  <%= bob_code brush: :shell do %>
+$ ruby hello_world.rb "Jan B"
+Hello, Jan B.
+  <% end %>
+</p>
+<p class='commentable' id="script"></p>
+<%= bob_header 'Shebang' %>
+<%= bob_left_span %>
+    <p>
+      Because Ruby executable can read the program from the <code>stdin</code>, it is easy to create standalone executable using shebang similar to shell scripts. For the best flexibility use <code>#!/usr/bin/env ruby</code>, which runs Ruby executable found in your <code>PATH</code>. Or directly specify which Ruby executable you want to use, like <code>#!/usr/local/bin/ruby19</code>. <br>
+      With the shebang, <code>hello_world.rb</code> should now looks like:
+      <%= bob_code filename: '2.2.hello_world_3.rb' %>  
+    </p>
+    <p>
+      Adding <em>executable</em> attribute to the script file with shebang allows you to run the Ruby program like the other scripts or executables:
+      <%= bob_code brush: :shell do %>
+$ chmod u+x hello_world.rb   
+$ ./hello_world.rb Stranger
+Hello, Stranger.
+      <% end %>
+    </p>
+<%= bob_right_span %>
+    <p>
+      <em>
+        <u>Shebang</u> is the magic characters sequence <code>#!</code> used at the beginning of the Unix shell script to show the program loader which interpreter to run with this script. With shebang, system will run the executable specified after <code>#!</code> and pass the content of the script to it. The shebang itself will not be interpreted, because in the most shells (and in Ruby as well) the line beginning with <code>#</code> is a comment.
+      </em>
+    </p>
+<%= bob_end_spans %>
+<p class='commentable' id="shebang"></p>

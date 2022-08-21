@@ -1,0 +1,60 @@
+<p>
+  The most obvious installation for Sysadmin is to use the repository specific to Operating System he is using. This is a part of our daily work, so there is no need to elaborate how to use <em>apt-get</em> or <em>port</em>. But what if we don't have the root privilages on the specific machine, or we want, for some reason, to have a different version of Ruby than it is installed on the OS? 
+</p>
+<%= bob_header 'rbenv' %>
+<p class='commentable' id="rbenv">
+  There is a number of tools which helps to install desired version of Ruby in the user home directory. The most common and widely used is <em>RVM</em> (Ruby Version Manager). The smaller and smarter one is <em>rbenv</em>, which can be obtained from Github at <%=bob_link_to 'https://github.com/sstephenson/rbenv' %>. RVM, in my humble opinion, uses to many hacks on the shell: for example it overrides the <em>cd</em> command. This is not a behaviour which Sysadmin likes!
+</p>
+<p>
+  Installation of <em>rbenv</em> is easy and straightforward:
+  <ul class='circle'>
+    <li>
+      Get <em>rbenv</em> and <em>ruby build</em> plugin from Github:
+      <%= bob_code brush: :plain do %>
+git clone https://github.com/sstephenson/rbenv.git ~/.rbenv
+git clone https://github.com/sstephenson/ruby-build.git ~/.rbenv/plugins/ruby-build 
+      <% end %>
+    </li>
+    <li>
+      Add the PATH and <em>rbenv init</em> to your .profile (.bash_profile, .zshrc, etc):
+      <%= bob_code brush: :shell do %>
+export PATH="$HOME/.rbenv/bin:$PATH"
+eval "$(rbenv init -)"
+      <% end %>
+    </li>
+    <li>
+      Use <code>rbenv install --list</code> to see the list of available Ruby versions:
+      <%= bob_code do %>
+$ rbenv install --list
+Available versions:
+[...]
+2.0.0-p247
+[...]
+      <% end %>
+    </li>
+    <li>
+      Install required Ruby version. Everything greater or equal to 2.0.0 should be compatibile with this book:
+      <%= bob_code brush: :plain do %>
+$ rbenv install 2.0.0-p247
+      <% end %>
+      Installer will download and compile the choosen version.
+    </li>
+    <li>
+      Finish the installation by setting up the freshly installed ruby version as default for this account:
+      <%= bob_code do %>
+$ rbenv rehash
+$ rbenv global 2.0.0-p247
+      <% end %>
+    </li>
+    <li>
+      Now you should have the new build of Ruby installed locally on your account:
+      <%= bob_code do %>
+$ ruby --version
+ruby 2.0.0p247 (2013-06-27 revision 41674) [x86_64-darwin13.1.0]
+      <% end %>
+  </ul>
+</p>
+<p class='commentable' id="rbenv2">
+  Using <code>rbenv</code> you can install and easy switch between the different versions of Ruby. For example, if you have Ruby installed on your operating system, you can switch to use it by issuing <code>rbenv global system</code>. To get back to the version installed on your user account, issue <code>rbenv global 2.0.0-p247</code> command. See <%=bob_link_to 'https://github.com/sstephenson/rbenv' %> for more informations.
+</p>
+

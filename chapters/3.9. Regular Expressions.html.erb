@@ -1,0 +1,269 @@
+<%= bob_header 'Regular Expressions Concept' %>
+<p class='commentable' id="regexp1">
+  Regular Expression (aka RE or Regexp) is the pattern used to match or find the regular strings. The basic concept is similar to the wildcards known from Shell: with asterisk <code>*</code> or question mark <code>?</code> you can match the files with some patterns, like <code>cu*txt</code> means everything starting with <code>cu</code> and ending with <code>txt</code>. We say that <strong>pattern <code>cu*txt</code> matches <code>cumail.txt</code> and <code>cucumber.txt</code></strong>. <br>
+
+  If you know Regexp already (as the Sysadmin you probably are using <code>sed</code>), you may be bored with the basics, but I consider this topic to be extremaly useful way to string processing, especially where parsing the logs, working with files, etc. Because of the tough syntax and poor human readability, RE are not easy to learn and use, so this chapter may be a bit challenging. Anyway, it is very good to be familiar with Regular Expressions, as shown in XKCD <%=bob_link_to 'https://xkcd.com/208/'%>!
+</p>
+
+<%= bob_header 'Syntax and Simple Matching' %>
+<p>
+  <%= bob_left_span %>
+  <p>
+  In Ruby, Regular Expression is a pattern between two slashes with optional modifier: <code>/pattern/modifier</code>. Like everything, Regexp is an object.<br>
+  The simplest way to match the string is to use matching operator <code>=~</code>, used with string and RE as the operands: <code>string =~ regexp</code>. This returns the index of first Regular Expression pattern matched or <code>nil</code> if not found.
+  <%= bob_code brush: :ruby do %>
+'the empire strikes back' =~ /the/    # match at the first char
+#=> 0
+
+'the empire strikes back' =~ /ikes /  # note the space
+#=> 14
+
+'the empire strikes back' =~ /ikes  / # this pattern doesn't match
+#=> nil                                   # because of double space
+
+'the empire strikes back' =~ /i/      # single character is RE as well
+#=> 7
+  <%  end %>
+  </p>
+  <%= bob_right_span %>
+  <p>
+    <em>
+      There is an excellent web page to test your Regular Expressions: <%= bob_link_to 'http://rubular.com' %>. I strongly recommend to develop your Regexp there.
+    </em>
+  </p>
+  <%= bob_end_spans %>
+</p>
+
+<p class='commentable' id="regexp3">
+  The matching operator is often used in <em>if-then-else</em> statements, because Ruby treats everything except <code>false</code> and <code>nil</code> to be <em>true</em>.
+</p>
+
+<p class='commentable' id="case-equality">
+  Another operator often used for matching is case equality operator, triple equal sign <code>===</code>. This one gets the Regexp as the left argument, and string as the right. It always returns <code>true</code> or <code>false</code>.
+  <%= bob_code brush: :ruby do %>
+/the/ === 'the empire strikes back'      # true, found at the beginning
+#=> true
+/empire/  === 'The Empire Strikes Back'  # Regexp operations are case-sensitive
+#=> false
+/empire/i === 'The Empire Strikes Back'  # unless you add modifier 'i'
+#=> true
+  <%  end %>
+</p>
+
+<p class='commentable' id="regexp-modifier">
+  On the example above we introduced the modifier 'i' - it means that all the operations on this Regular Expression will be case-insensitive. <br>
+  Note that the case equality operator is used in <em>case-when</em> statements, so it is very covinient to use RE in such statement:
+  <%= bob_code brush: :ruby do %>
+case `uname -a`
+when /linux/i, /freebsd/i
+  puts 'Users database is in /etc/passwd'
+when /darwin/i
+  puts 'Users are kept in Open Directory'
+end
+  <%  end %>
+</p>
+
+<%= bob_header 'Patterns' %>
+<p class='commentable' id="pattern">
+  So far we know how to match the string itself, but what about the wildcards, like asterisk in the shell? In Regular Expression, the approach is a bit different. Let's start with the simplest patterns:
+  <ul class='circle'>
+    <li> <code>.</code> matches any single character</li>
+    <li> <code>^</code> matches the beginning of the line (or the string, if it is one line long)</li>
+    <li> <code>$</code> matches the end of or line or string, like above</li>
+    <li> <code>\A</code> matches the beginning of the whole string (not only the line)</li>
+    <li> <code>\z</code> matches the end of the whole string (not only the line)</li>
+  </ul>
+  <%= bob_code brush: :ruby do %>
+/Back$/ =~ 'The Empire Strikes Back'   # 'Back' found at the end of the line
+#=> 19
+/Back$/ =~ 'The Empire Strikes Back!'  # but not here - there is a character before the end
+#=> nil
+/Back.$/ =~ 'The Empire Strikes Back!' # dot is a pattern for ANY SINGLE character, so '!' matches
+#=> 19
+/^The Empire ....... Back$/ =~ 'The Empire Strikes Back'  # matched
+#=> 0
+  <%  end %>
+</p>
+
+<p class='commentable' id="pattern2">
+  Matching a single characters is not especially useful. It would be good to have something similar to wildcard to match more characters in the expression. Unlike in the shell, there is no universal <em>zero or more any characters</em> wildcard, and the approach is different: asterisk <code>*</code> means <em>zero or more preceding Regular Expression</em>. The preceding Regexp may be any Regular Expression, in particular the single character. This sometimes confuses the Sysadmins, because <code>res*conf</code> does not match <code>resolv.conf</code>! It matches <code>resconf</code>, <code>reconf</code> and <code>resssssssconf</code> - <strong>zero or more occurence of preceding expression</strong>, in this case the single character 's'. <br>
+  With this knowledgle we can construct the equivalent of the shell wilcard <code>*</code> - in Regular Expressions it is <code>.*</code> - because the dot means any character, and the asterisk is zero or one occurence of the preceding expression. <strong>Dot followed by asterisk <code>.*</code> is then the Regular Expressions equivalent of wildcard <code>*</code> in Unix Shell</strong>. <br>
+  Asterisk is not the only pattern repetition:
+  <ul class='circle'>
+    <li> <code>RE*</code> matches zero or more occurences of RE</li>
+    <li> <code>RE+</code> matches one or more occurences of RE</li>
+    <li> <code>RE?</code> matches zero or one occurence of RE</li>
+  </ul>
+  <%= bob_code brush: :ruby do %>
+'The Empire Strikes Back' =~ /The.*Back/  # match, there are zero or more occurences of any character
+#=> 0
+'The Empire Strikes Back' =~ /The.?Back/  # not match: there is more than one any characters between the words
+#=> nil
+
+'The Empire Strikes Back' =~ /Empire +Strikes/    # found one or more spaces between this words
+#=> 4
+'The Empire    Strikes Back' =~ /Empire +Strikes/ # as above
+#=> 4
+'TheEmpireStrikesBack' =~ /Empire +Strikes/       # it must be at least one space between the words
+#=> nil
+'TheEmpireStrikesBack' =~ /Empire *Strikes/       # asterisk allows zero occurences
+  <%  end %>
+</p>
+
+<p class='commentable' id="pattern3">
+  The square brackets are used to match any <strong>single</strong> character from the collection. For example, <code>[aeiouy]</code> matches a <strong>single</strong> vowel, <code>[012345679]</code> - a digit and <code>[\.,\?!]</code> - one of this punctation marks: <code>.,?!</code>. Notice that the <strong>dot and question mark (as well as the other metacharacters) must be escaped by the backslash</strong> because they are a part of Regular Expression Syntax. <br>
+  Instead of typing <code>[0123456789]</code> you can use a range: <code>[0-9]</code>. The same is for the letters.
+  <ul class='circle'>
+    <li> <code>[qwerty]</code> matches any the characters: 'q', 'w', 'e', 'r', 't' and 'y'</li>
+    <li> <code>[0-9]</code> matches range: any single digit</li>
+    <li> <code>[^0-9]</code> matches any character except the digits</li>
+    <li> <code>[a-z]</code> matches range: any single letter (from 'a' to 'z')</li>
+    <li> <code>[a-zA-z]</code> matches range: any single uppercase letter (from 'A' to 'Z')</li>
+  </ul>
+  <%= bob_code brush: :ruby do %>
+'The Empire Strikes Back'.gsub(/[aeiouy]/, '*')        # replace all occurences of vowels with star
+#=> "Th* Emp*r* Str*k*s B*ck"
+'The Empire Strikes Back'.sub(/[aeiouy]/, '*')         # replace first match only
+#=> "Th* Empire Strikes Back"
+'The Empire Strikes Back'.gsub(/[A-Z][a-z]*/, 'Yoda')  # replace all uppercase words with string
+#=> "Yoda Yoda Yoda Yoda"
+'The Empire Strikes Back'.scan(/[A-Z][a-z]*/)          # find and return all uppercase words
+#=> ["The", "Empire", "Strikes", "Back"]             
+  <%  end %>
+</p>
+
+<p class='commentable' id="pattern4">
+  In the example above we introduced three useful String methods which uses Regular Expressions: 
+  <ul class='circle'>
+    <li><code>sub(regexp, string)</code>, which replaces the first match of RE with the given string</li>
+    <li><code>gsub(regexp, string)</code> to replace all matches, not only the first one</li>
+    <li><code>scan</code> to find out all matches and return an array containing found strings</li>
+  </ul>
+</p>
+<p class='commentable' id="pattern5">
+  There are more Regular Expression patterns available, for the complete list take a look at the documentation <code>ri Regexp</code>. Here is a list of few useful patterns:
+  <ul class='circle'>
+    <li><code>\s</code> any single whitespace character (space, tab)</li>
+    <li><code>\S</code> any non-whitespace character (everything except space, tab)</li>
+    <li><code>\d</code> any digit (equivalent to [0-9])</li>
+    <li><code>\D</code> any non-digit (equivalent to [^0-9])</li>
+    <li><code>\w</code> any word character (letter, digit, underscore)</li>
+    <li><code>\W</code> any non-word character (everything except letter, digit, underscore)</li>
+  </ul>
+  <%= bob_code brush: :ruby do %>
+'The Empire Strikes Back'.gsub(/\s/, '.')         # replace all whitespaces with dots
+#=> "The.Empire.Strikes.Back"
+'I have $33, and you $15.50.'.scan /\$\d+\.*\d*/  # search for the money
+#=> ["$33", "$15.50"]
+
+# returns information if the given string is the real, floating point number
+def is_float?(str)
+  # string must have at least one digit at the beginnig, a dot, and at least one digit before the end
+  if str =~ /^\d+\.+\d+$/
+    true
+  else
+    false
+  end
+end
+is_float? '42.42'
+#=> true
+is_float? 'Yoda'
+#=> false
+is_float? '42' 
+#=> false
+  <%  end %>
+</p>
+
+<%= bob_header 'Capturing the Matched Strings' %>
+<p class='commentable' id="capture1">
+  The simple Regular Expression matching is not enough - it is only the check if the pattern fits the string. It would be nice to extract the matched substrings. To do it, use parenthesis - the part of the string matching the Regular Expression enclosed in the parenthesis will be a part of the output as a <em>matching group</em>. <br>
+  It is easier to understand it using the example. Lets say we have a string with two amounts in USD. What we need to do, is to search for a numbers (which may contain dot) followed by the dollar sign - this RE <code>/\$\d+\.?\d*/</code> does the trick. It is a dollar sign (escaped with backslash, as dollar means end of line), then comes one or more digits <code>\d+</code>, then zero or one dot (escaped as well), and at the end the optional numbers. We want to output only the numbers, without following dollar sign, so we need to enclose in parenthesis only this part of RE, which match the number: <code>/\$(\d+\.?\d*)/</code>. In can be anything between this two numbers, so we put <code>.*</code> between and now we can extract the exact amount from the string:
+  <%= bob_code brush: :ruby do %>
+usd = /\$(\d+\.?\d*).*\$(\d+\.?\d*)/         # RE definition
+#=> /\$(\d+\.?\d*).*\$(\d+\.?\d*)/
+
+m = usd.match 'I have $33, and you $15.50.'  # match this string
+#=> #&lt;MatchData "$33, and you $15.50" 1:"33" 2:"15.50"&gt;
+m[1]                                         # first match group
+#=> "33"
+m[2]                                         # second match group
+#=> "15.50"
+
+m = usd.match 'This movie costs $12.50 ($4 to rent).'
+#=> #&lt;MatchData "$12.50 ($4" 1:"12.50" 2:"4"&gt;
+  <%  end %>
+</p>
+
+<p class='commentable' id="capture2">
+  Notice the <code>match(string)</code> method on Regular Expression object. It is quite similar to match operator <code>=~</code>, but it does not return the position of the first match, but the <code>MatchData</code> object, which contains the found substrings and the <em>match groups</em> - found substrings. In the previous example there are two match groups, number one <code>m[1]</code> and number two <code>m[2]</code>. Notice that matched groups counts from 1, because <code>m[0]</code> contains the whole matched string.<br>
+  Match groups does not have to be indexed by the numbers - they could be <strong>named</strong>. The syntax for naming the groups is: <code>(?&lt;name&gt;)</code> or <code>(?'name')</code>. Then you can use this name to extract the string from the <code>MatchData</code> object. To have an example, let's define the Regular Expression to extract the data from the <code>/etc/passwd</code> file:
+  <%= bob_code brush: :ruby do %>
+re = /(?'username'\w+):.*:\d+:\d:(?'fullname'.*):.*:(?'shell'.+)/
+#=> /(?'username'\w+):.*:\d+:\d:(?'fullname'.*):.*:(?'shell'.+)/
+
+m = re.match 'root:*:0:0:System Administrator:/var/root:/bin/sh'
+#=> #&lt;MatchData "root:*:0:0:System Administrator:/var/root:/bin/sh" username:"root" fullname:"System Administrator" shell:"/bin/sh"&gt;
+m[:username]
+#=> "root"
+
+m = re.match 'daemon:*:1:1:System Services:/var/root:/usr/bin/false'
+#=> #&lt;MatchData "daemon:*:1:1:System Services:/var/root:/usr/bin/false" username:"daemon" fullname:"System Services" shell:"/usr/bin/false"&gt;
+m[:shell]
+#=> "/usr/bin/false"
+  <%  end %>
+</p>
+
+<%= bob_header 'Last Match' %>
+<p class='commentable' id="last-match">
+  There is a quite handy shortcut for Regular Expressions: the <code>Regexp.last_match</code> class method. It is set up after every matching and contains the <code>MatchData</code> object of the last match. Thus it could be used with the operators:
+  <%= bob_code brush: :ruby do %>
+passwd_re = /(?'username'\w+):.*:\d+:\d:(?'fullname'.*):.*:(?'shell'.+)/
+
+line = 'root:*:0:0:System Administrator:/var/root:/bin/sh'
+if passwd_re =~ line
+  puts "Shell for #{Regexp.last_match[:username]} is #{Regexp.last_match[:shell]}"
+else
+  puts "String is not passwd line!"
+end
+
+line = 'wheel:*:0:root'
+case line
+when passwd_re
+  puts "Shell for #{Regexp.last_match[:username]} is #{Regexp.last_match[:shell]}"
+when /(?'group'\w+):.*:(?'groupid'\d+):.*/
+  puts "Group #{Regexp.last_match(:group)} has id: #{Regexp.last_match(:groupid)}"
+else
+  puts "String is not passwd or group line!"
+end
+  <%  end %>
+</p>
+
+<p class='commentable' id="last-match-expl">
+  The first part uses match operator to determine if the given line matches the passwd pattern and if so it reads the <code>MatchData</code> values from the <code>last_match</code>. The second part is more interesting: as you probably remeber, Ruby uses case equality operator <code>===</code> to comparing the objects in <em>case-when</em> statements. Because this operator can be used on the Regexp as well, the Regular Expressions work in <em>case-when</em> by default, for free.
+</p>
+
+<%= bob_header 'Real World Example: Apache Log' %>
+<p class='commentable' id="apache-log">
+  At the end let's try to parse the real log file entries. Notice that the <code>line</code> variable contains few lines ending with newline, so we need to split them and iterate on each line. We already know <code>split</code> method, and it is not surprising that it could take RE instead of String as an argument.
+  <%= bob_code brush: :ruby do %>
+re = /^(\d+\.\d+\.\d+\.\d+).*\[(.*)\] "(.*)" (\d*) (\d*) "(.*)" "(.*)"$/
+lines = '93.200.119.68 - - [20/Jun/2014:19:20:46 +0200] "GET /images/hidr.jpg HTTP/1.1" 200 335 "http://www.tg.pl/iPhone/AppStoreReviews/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"
+93.200.119.68 - - [20/Jun/2014:19:20:46 +0200] "GET /favicon.ico HTTP/1.1" 404 209 "-" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"
+93.200.119.68 - - [20/Jun/2014:19:20:56 +0200] "GET /iPhone/AppStoreReviews/AppStoreReviews.zip HTTP/1.1" 200 4167 "http://www.tg.pl/iPhone/AppStoreReviews/" "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.153 Safari/537.36"
+5.9.18.147 - - [20/Jun/2014:19:24:28 +0200] "GET /robots.txt HTTP/1.0" 404 208 "-" "Mozilla/5.0 (compatible; MJ12bot/v1.4.5; http://www.majestic12.co.uk/bot.php?+)"
+5.9.18.147 - - [20/Jun/2014:19:24:32 +0200] "GET / HTTP/1.0" 200 3713 "-" "Mozilla/5.0 (compatible; MJ12bot/v1.4.5; http://www.majestic12.co.uk/bot.php?+)"
+'
+
+lines.split(/\n/).each do |line|                    # split log to array and iterate on it
+  m = re.match line                                 # match the lines one by one
+  puts "Request from #{m[1]} at #{(m[2])}" if m     # display message if matched
+end
+  <%  end %>
+</p>
+
+<%= bob_header 'Summary' %>
+<p class='commentable' id="regexp-summary">
+  There is much more about RE in Ruby, this chapter contains only the basics needed to start working with it. For detailed informations visit <%=bob_link_to 'http://ruby-doc.org/core-2.0.0/Regexp.html' %> or use the embeded documentation <code>ri Regexp</code>. <br>
+  Regular Expressions need some practice and could be hard to debug, especially when became long and complicated. Always use Rubular <%= bob_link_to 'http://rubular.com' %> to create and debug your Regexps!
+</p>
+

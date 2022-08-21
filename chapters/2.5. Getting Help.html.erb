@@ -1,0 +1,46 @@
+<%= bob_header 'Ri, the build-in documentation' %>
+<p class='commentable' id="ri">
+  Ruby package contains the full API reference. It is available with <code>ri</code> command line. You might think about it as the <code>man</code> in Ruby world. This reference is available not only for the Ruby core, but for the installed gems as well (if the Gem provides it). You can search the documentation for classes and methods:
+  <ul class="no-bullet">
+    <li>
+      <code>ri Class</code> - then you are searching for general information on the specified class
+    </li>
+    <li>
+      <code>ri method</code> - find out all methods with the given name, in all classes (it might generate a long output)
+    </li>
+    <li>
+      <code>ri Class#method</code> - for instance methods in a given class
+    </li>
+    <li>
+      <code>ri Class::method</code> - to search for class methods in specified class
+    </li>
+    <li>
+      <code>ri Class.method</code> - for both class and instance methods (instance and class methods to be discussed later)
+    </li>
+  </ul>
+</p>
+<p>
+  For example, to find out about <code>String</code> class:
+  <%= bob_code filename: '2.5.ri_String.txt' %>
+</p>
+<p class='commentable' id="ri2">
+  It contains handy information: third line shows from which class Sting inherits, 5-6 line describes all includes (includes and inheritance are to be discussed later), then the general description of the object and class and instance methods. Notice there is a method called <code>count</code>, which we will use in a further examples.
+</p>
+<p>
+  When searching for a documentation for a specific method, for example <code>count</code>, you can use <code>ri count</code> command line, but you will see all of the object which implements this methods. The output below is truncated to show only few methods, but it may be very long if you have a lot of Gems installed:
+  <%= bob_code filename: '2.5.ri_count.txt' %>
+</p>
+<p class='commentable' id="ri3">
+  <code>count</code> is implemented in many classes, such as Array (4th line), Enumerable (line number 27) or GC (46). Much better is to specify the class, which <code>ri</code> should search. To do it, use <code>ri String#count</code> or <code>ri String.count</code>:
+  <%= bob_code filename: '2.5.ri_String_count.txt' %>
+</p>
+<p class='commentable' id="ri4">
+  Line 5 describes that this method comes from Ruby core, not from the outside Gem. 7th line shows the syntax of the method - <code>str.count</code> means it is invoked on the string object, next in parenthesis there are the parameters of the method - <code>([other_str]+)</code> means it takes one or more "other string" parameters. Finally, <code>-> fixnum</code> means that the method returns a number (an object of class Fixnum).<br>
+  After the description there are examples of invoking the method. Usually the example is followed by the <code>#=></code> sequence (the hash sign and a default output prompt in <code>irb</code>) and the output value. So, in this case, <code>a.count "lo" #=> 5</code> means that <code>a.count "lo"</code> should return number 5. Note, not every example line is covered by the return value - this is because some return values are meaningless in this case. And because of the hash # sign, Ruby treats the output given in the examples as a comment, so you can easy copy and paste this examples directly to <code>irb</code>, to check and play with it:
+  <%= bob_code filename: '2.5.ri_String_count_examples.rb' %>
+</p>
+<%= bob_header 'The Web' %>
+<p class='commentable' id="web">
+  There is a number of Ruby resources on the Web. The central site for the documentation is ruby-lang.org - <%=bob_link_to 'https://www.ruby-lang.org/en/documentation/'%>. Ruby core API reference is on the ruby-doc.org - <%=bob_link_to 'http://www.ruby-doc.org/core-2.0.0/'%> (note there are similar pages for the other Ruby version, for example <%=bob_link_to 'http://www.ruby-doc.org/core-1.9.3/'%> for Ruby 1.9.3). On this page, you can filter the classes and methods to find out interesting documentation. For example, our <code>String#class</code> method is here: <%=bob_link_to 'http://www.ruby-doc.org/core-2.0.0/String.html#method-i-count'%>.<br>
+  Another sites worth know is RubyDoc <%= bob_link_to 'http://www.rubydoc.info'%> - the hudge warehouse with documentation of Ruby Gems, the ApiDock - <%= bob_link_to 'http://apidock.com/ruby'%> - contains the API documentation with comments, which sometimes explains more than the raw API reference, and - last but not least - StackOverflow, the ultimate Questions and Answers site, where you can find and lot of explanations of how Ruby works. For example, here <%= bob_link_to 'http://stackoverflow.com/questions/5305638/stringcount-options'%> you can find a detailed exaplanation on <code>String#count</code> method.
+</p>

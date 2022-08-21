@@ -1,0 +1,219 @@
+<p>
+  In your scripts there is often a need to store the config file, which describes the behaviour of the script, like which files to delete or which servers to ping. In Ruby there is a number of possiblities to archive this. The simplest way is to just to include all the necessary information at the top of the script and, for example, store all that information in Ruby constants. But of course, this is far away from a good practice. Much better is to keep the config in a file (stored in <code>/etc</code> or <code>/usr/local/etc</code> for convention) and load the data from the script.
+</p>
+<%= bob_header 'Comma-Separated Values' %>
+<p class='commentable' id='csv'>
+  The simplest possible configuration file would be a comma-separated values file, aka <code>CSV</code>. Such files stores the record (row) in one line and separates the values (colums) with commas, semicolons or colons. The well-known example of the CSV-like is <code>/etc/passwd</code>, which stores users, one user for one line. <br>
+  Let's imagine we want to store the servers we want to process in the script. We can write this information in <code>servers.conf</code> like:
+  <%= bob_code brush: :text do %>
+# server name, domain, server ip, server type
+yoda,starwars.com,192.168.1.31,freebsd
+vader,starwars.com,192.168.1.32,solaris
+kirk,startrek.com,192.168.1.33,windows
+  <% end %>
+</p>
+
+<p class='commentable' id='csv2'>
+  It is easy to process such file, just read every single line and do neccessary stuff (like initialize the server objects). Good practice is to treat every line starting with hash sign as a comment and do not read it. Empty lines (<code>line.chomp.empty?</code>) should be ignored as well. The scriplet below creates the objects (based on <code>type</code> property in the config file) and adds it to the <code>servers</code> array.
+  <%= bob_code brush: :ruby do %>
+servers = []
+open 'servers.conf' do |config_file|
+  config_file.each_line do |line|
+    unless line.chomp.empty? || line =~ /^#/
+      name, domain, ip, type = line.split ','
+      servers << case type
+      when /windows/i
+        WindowsServer.new(name, domain)
+      when /linux/i, /freebsd/i, /solaris/i
+        UnixServer.new(name, domain)
+      end
+    end
+  end
+end
+  <% end %>
+</p>
+
+<p class='commentable' id='csv3'>
+  But there is no need to read CSV as a text file and extract all the information manuall. Ruby contains CSV library in the standard distribution. All you need to do is <code>require 'csv'</code>, then you can just <code>CVS.read</code> the file and have an array of arrays in return. All you should do after this is to remove empty lines and comments:
+  <%= bob_code brush: :ruby do %>
+require 'csv'
+#=> true
+servers = CSV.read 'servers.conf'
+#=> [["# server name", " domain", " server ip", " server type"], ["yoda", "starwars.com", "192.168.1.31", "freebsd"], ["vader", "starwars.com", "192.168.1.32", "solaris"], ["kirk", "startrek.com", "192.168.1.33", "windows"], []]
+servers = servers.reject {|x| x.empty? || x.first =~ /^#/}
+#=> [["yoda", "starwars.com", "192.168.1.31", "freebsd"], ["vader", "starwars.com", "192.168.1.32", "solaris"], ["kirk", "startrek.com", "192.168.1.33", "windows"]]
+  <% end %>
+</p>
+
+<p class='commentable' id='csv4'>
+  There are much more possibilities with standard CSV library, you may want to take a look into a documentation with <code>ri CSV</code>. One of the most useful is <code>skip_blanks: true</code> which, as you probaly guess, eliminates empty lines. The other interesting option is to force CSV to treat the first line as a header with <code>header: true</code> option. With this, you can easly access the data with colum names instead of the index numbers. <br> 
+  <%= bob_code brush: :ruby do %>
+servers = CSV.read 'servers.conf', headers: true, skip_blanks: true
+#=> #&lt;CSV::Table mode:col_or_row row_count:4&gt;
+servers.headers
+#=> ["# server name", " domain", " server ip", " server type"]
+servers['# server name']
+#=> ["yoda", "vader", "kirk"]
+servers[0]['# server name']
+#=> "yoda"
+servers[1][' server ip'] # notice the leading space
+#=> "192.168.1.32"
+  <% end %>
+</p>
+
+<p class='commentable' id='csv5'>
+  But header names like this are not very useful. They are Strings contaning the whitespaces - not very useful object as a key. Fortunately, CSV library has an ability to convert the header while loading the file with <code>header_converters: converter</code> option. The following example will convert the headers to <em>snake_case</em> symbols:
+  <%= bob_code brush: :ruby do %>
+servers = CSV.read 'servers.conf', headers: true, skip_blanks: true, header_converters: :symbol
+servers.headers
+#=> [:_server_name, :_domain, :_server_ip, :_server_type]
+  <% end %>
+</p>
+
+<p class='commentable' id='csv6'>
+  Better, but still not ideal - because the leading spaces convert to underscores. It would be good to have the converter which changes the header to more readable symbol. CSV library allows it - all the converters are the lambda function in <code>CSV::HeaderConverters</code> hash:
+  <%= bob_code brush: :ruby do %>
+CSV::HeaderConverters[:symbol]
+#=> #&lt;Proc:0x007fcfd225d790@/Users/turbo/.rbenv/versions/2.0.0-p247/lib/ruby/2.0.0/csv.rb:993 (lambda)&gt;
+  <% end %>
+</p>
+
+<p class='commentable' id='csv7'>
+  When loading the file, CSV library applies the selected lambda function to every header. You can take a look into <code>csv.rb</code> source code, line 993, as shown above, to learn what the function described as <code>:symbol</code> is doing with the header. So why no to create our own converter? Lets call it <em>symbolize</em> and add to the <code>CSV::HeaderConverters</code>. It should be a function which first <code>strip</code> the string (remove leading and trailing spaces), then change all whitespaces to underscore (<code>gsub(/\s+/, "_")</code>), then remove non-word characters, like hash (<code>gsub(/\W+/, "")</code>), remove leading underscores (<code>gsub(/^_+/, "")</code>) and, finally, converts this string to symbol:
+  <%= bob_code brush: :ruby do %>
+CSV::HeaderConverters[:symbolize] = lambda do |header| 
+  header.strip.gsub(/\s+/, "_").gsub(/\W+/, "").gsub(/^_+/, "").to_sym
+end
+servers = CSV.read 'servers.conf', headers: true, header_converters: :symbolize, 
+                                   skip_blanks: true
+servers.headers
+#=> [:server_name, :domain, :server_ip, :server_type]
+servers[:server_name]
+#=> ["yoda", "vader", "kirk"]
+  <% end %>
+</p>
+
+<p>
+  <%= bob_header 'YAML' %>
+  <%= bob_left_span %>
+    <p class='commentable' id='yaml'>
+      YAML (YAML Ain't Markup Language or Yet Another Markup Language) is a formal language for data serialization. Because it is language-independent and very human-readable, YAML became a standard for storing a configuration data in many frameworks and programs. YAML files are just a text files which can be read and write in any text editor. Below is an example of the data structure which may be used as a configuration file:
+    </p>
+  <%= bob_right_span %>
+    <p>
+      <em>Serialization</em> (aka <em>Marshalling</em>) is the process of translation the data structures (like Objects in Ruby) to the format, which can be stored outside the program - like in file on disk.
+    </p>
+  <%= bob_end_spans %>
+  <%= bob_code brush: :plain do %>
+listener:
+  host: 127.0.0.1
+  port: 6502
+machines:
+- name: yoda
+  domain: starwars.com
+- name: kirk
+  domain: startrek.com
+  <% end %>
+</p>
+
+<p class='commentable' id='yaml2'>
+  This YAML can be interpreted by Ruby using <code>YAML::load_file</code> method, which returns object created after parsing YAML file - in this example is it a Hash:
+  <%= bob_code brush: :ruby do %>
+require 'yaml'
+#=> true
+YAML::load_file('server.conf')
+#=> {"listener"=>{"host"=>"127.0.0.1", "port"=>6502}, "machines"=>[{"name"=>"yoda", "domain"=>"starwars.com"}, {"name"=>"kirk", "domain"=>"startrek.com"}]}  
+<% end %>
+</p>
+
+<p class='commentable' id='yaml3'>
+  As you can see, pairs <code>key: value</code> translates to Hash elements, literals became a String or a Fixnum (notice that 127.0.0.1 is a String, even if it starts with the number), and finally elements started with a dash appear as a members of an Array. <br> But not only Strings and Numbers can be stored: you can put every Ruby object inside the YAML file, for example <code>Symbol</code>, as a literal begins with colon, Time (in specified format, like <code>2015-02-17 19:25:00 +0100</code>), <code>true</code> or <code>false</code> objects, or even <code>nil</code>.
+  <%= bob_code brush: :plain do %>
+- :name: yoda
+  # you can put a comment in the YAML file
+  :domains: [starwars.com, star-wars.com] # Array of Strings
+  :golive_time: 2015-02-16 19:25:00 +01:00
+  :alive: true
+  :description:
+- :name: kirk
+  :domain: startrek.com
+  :description: The old blue Sun in the corner
+                of the server room
+  <% end %>
+</p>
+
+<p class='commentable' id='yaml4'>
+  The example above loads as an Array of two Hashes. Notice that you do not have to put the Array elements in distinct lines, there is a one-line shorthand for this: <code>[element1, element2]</code>. Literal <code>true</code> is converted to <code>true</code> object, empty space became <code>nil</code>. Also the date with time translates to the proper <code>Time</code> object.
+  <%= bob_code brush: :ruby do %>
+YAML::load_file('server.conf')
+#=> [{:name=>"yoda", :domains=>["starwars.com", "star-wars.com"], :golive_time=>2015-02-16 19:25:00 +0100, :alive=>true, :description=>nil}, 
+#    {:name=>"kirk", :domain=>"startrek.com", :description=>"The old blue Sun in the corner of the server room"}]
+YAML::load_file('server.conf').first[:golive_time].class
+#=> Time
+  <% end %>
+</p>
+
+<%= bob_header 'Saving Existing Objects to YAML' %>
+<p class='commentable' id='yaml5'>
+  We mentioned about <em>serialization</em> of the data structures. YAML allows that, which means that we can easly translate the existing object to YAML, store it, edit it, and load later. <br>
+  After loading YAML library every single object can be transformed to YAML using <code>to_yaml</code> method.
+  <%= bob_code brush: :ruby do %>
+require 'yaml'
+#=> true
+servers = [{name: "kirk", no_processors: [16, 32], golive: Time.now}, 
+           {name: "yoda", no_processors: nil}]
+#=> [{:name=>"kirk", :no_processors=>[16, 32], :golive=>2015-02-16 15:52:11 +0100}, 
+#    {:name=>"yoda", :no_processors=>nil}]
+servers.to_yaml
+#=> "---\n- :name: kirk\n  :no_processors:\n  - 16\n  - 32\n  :golive: 2015-02-16 15:52:11.242406000 +01:00\n- :name: yoda\n  :no_processors: \n"
+File.open('servers.conf', 'w') { |f| f.puts servers.to_yaml }
+#=> nil
+  <% end %>
+</p>
+
+<p class='commentable' id='yaml6'>
+  The <code>to_yaml</code> method on this Array produces human-readable document as shown below:
+  <%= bob_code brush: :plain do %>
+---
+- :name: kirk
+  :no_processors:
+  - 16
+  - 32
+  :golive: 2015-02-16 19:54:16.550614000 +01:00
+- :name: yoda
+  :no_processors: 
+  <% end %>
+</p>
+
+<p class='commentable' id='yaml7'>
+  But not only Ruby built-in object can be stored in YAML. You can do it with <em>every</em> object, so your own objects as well. Consider the simple <code>Server</code> objects, stored in the Array:
+  <%= bob_code brush: :ruby do %>
+require 'socket' # needed for getaddress()
+class Server
+  def initialize(name, domain)
+    @name = name
+    @domain = domain
+    @ip = IPSocket.getaddress("#{name}.#{domain}")
+  end
+end
+servers = [Server.new('www','rubyforadmins.com'), Server.new('www','google.com')]
+servers.to_yaml
+#=> "---\n- !ruby/object:Server\n  name: www\n  domain: rubyforadmins.com\n  ip: 83.144.118.166\n- !ruby/object:Server\n  name: www\n  domain: google.com\n  ip: 173.194.65.105\n"
+  <% end %>
+</p>
+
+<p>
+  After loading the following file with <code>YAML::load_file</code> you wil get the Array of Server objects. That's all!
+  <%= bob_code brush: :plain do %>
+---
+- !ruby/object:Server
+  name: www
+  domain: rubyforadmins.com
+  ip: 83.144.118.166
+- !ruby/object:Server
+  name: www
+  domain: google.com
+  ip: 173.194.65.105  <% end %>
+</p>
+
+

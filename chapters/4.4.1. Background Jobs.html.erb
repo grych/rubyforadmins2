@@ -1,0 +1,61 @@
+<%= bob_header 'Fork' %>
+<p class='commentable' id='fork'>
+  The simplest and the most obvious way to run the background process is to <code>fork</code> the current process to split it to two processes. There are two ways to do it: <br>
+  <code>fork { block }</code> - when the block is given, it will be executed in a subprocess
+  <code>fork</code> - without the block, <code>fork</code> behaves the same as <code>fork()</code> function from the Unix standard library: it returns PID of the process in the parent, and <code>nil</code> in the child.
+  <br>
+  Notice that child process inherits all I/O from the parent, so <code>stdout</code>, <code>stdin</code> and all the open file descriptors.
+  <%= bob_code filename: '4.4.1.fork.rb' %>
+</p>
+
+<p class='commentable' id='fork2'>
+  The example above launches <code>fork</code> to split into parent and child process. The parent process shows the child PID and waits for 5 seconds, while the child sleeps for only two seconds. This is to ensure that the child finishes <strong>before</strong> parent, otherwise the child process may became a <code>zombie</code>. <br>
+  The other way to use <code>fork</code> is to put the child code into a block: 
+  <%= bob_code filename: '4.4.1.fork-block.rb' %>
+</p>
+
+<%= bob_header 'Wait for the Background Process to Finish' %>
+<p class='commentable' id='wait'>
+  When running the backgroup process, parent process should not finish before ensure, that all the childs are not running. There is a method for that: <code>Process.wait</code>. You can give the child pid as an argument - in this case it will wait for this specific process to finish. Without any arguments, it waits for <strong>any</strong> child process to finish (so if you run more than one child, you should control all of them).
+  <%= bob_code filename: '4.4.1.fork-wait.rb' %>
+</p>
+
+
+<%= bob_header 'Prevent the Zombie Apocalypse' %>
+<p class='commentable' id='detach'>
+  When you do not want to wait for you child process to finish, you should <code>detach</code> the children process from the parent. Then, you can clearly exit your parent, without the danger of zombie. In the example below, parent process quits and leaves the child running:
+  <%= bob_code filename: '4.4.1.fork-detach.rb' %>
+</p>
+
+<%= bob_header 'When the Child Becames a Daemon' %>
+<p class='commentable' id='fork-daemon'>
+  If you just detach the child process from the parent, it will work in a background. But it will not beacame a <code>daemon</code> - when you close your terminal, the process may receive <code>SIGHUP</code> signal, which by default causes the process to exit. The other problem is <code>stdin</code>, <code>stdout</code> and <code>stderr</code> - they are attached to the terminal, so when you quit your shell they are lost, and the background process dies. <br>
+  So to create a true <code>daemon</code>, you must reopen the standard I/O and redirect it to somewhere else (a file or <code>/dev/null</code>) and catch the <code>SIGHUP</code> signal.
+  <%= bob_code filename: '4.4.1.fork-daemon.rb' %>
+</p>
+
+<p class='commentable' id='fork-daemon2'>
+  In the example above we for and detach the child process, as it was in the previous scripts. Then, in the child code, we reopen (redirect) all the standard I/O to file or the the <code>/dev/null</code>. After this, we build a <code>trap</code> for <code>SIGHUP</code> - <code>trap(:HUP) { block }</code> runs the block every time the process receives <code>SIGHUP</code>. <br>
+  Of course you can catch not only the <code>SIGHUP</code>, see <code>Signal.list</code> for the complete hash of signal name and the corresponding number. Notice that this numbers may vary in the different OS. And of course you cannot catch the <code>SIGKILL</code>. There is a method <code>Signal.kill(signal, pid)</code> to send the signal to the specified process.
+</p>
+
+<%= bob_header 'Daemonize the Process with Daemons Gem' %>
+<p class='commentable' id='daemons-gem'>
+  For now we know how to run a daemon, and we can control it by sending some signals. But it would be nice, if we could have an interface to control the backgound job, like the standard <code>start</code>/<code>stop</code>/<code>status</code> switches in Unix daemons. Well, <strong>There is a Gem for that</strong>. It is called <code>daeamons</code> and provides the interface to control your background jobs:
+  <%= bob_code filename: '4.4.1.daemon.rb' %>
+</p>
+
+<p class='commentable' id='deamons-gem-2'>
+  As you can see, all the server code is a block passed to <code>Daemons.run_proc</code> method. You can assign the process name as the argument. Now, just run the script with <code>start</code>, <code>stop</code> or <code>status</code> command line arguments:
+  <%= bob_code brush: :shell do %>
+% ruby daemon.rb start
+% ruby daemon.rb status
+lazyd: running [pid 50486]
+% ps -ef|grep 50486
+  501 50486     1   0  8:54PM ??         0:00.06 lazyd  
+  501 50519 49230   0  8:54PM ttys003    0:00.00 grep 50486
+% ruby daemon.rb stop  
+lazyd: trying to stop process with pid 50486...
+lazyd: process with pid 50486 successfully stopped.
+  <% end %>
+</p>

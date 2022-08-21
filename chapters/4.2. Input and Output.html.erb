@@ -1,0 +1,177 @@
+<%= bob_header 'Writing to Stdout and Stderr' %>
+<p class='commentable' id="stdout">
+  We are already familiar with working with <code>stdout</code> - we know methods <code>puts</code>, <code>print</code> or <code>printf</code> which writes the desired string to stdout: <code>puts</code> adds newline at the end while <code>print</code> not, and <code>printf</code> formats the output string with C-like pattern. <br>
+  But what if we want to write to <code>stderr</code> instead? There are pre-defined global objects: <code>$stdin</code>, <code>$stdout</code> and <code>$stderr</code> for that. You can use any of the method above on this objects:
+  <%= bob_code brush: :ruby do %>
+$stdout.class         # $stdout, $stdin and $stderr are instances of the IO class
+#=> IO
+
+$stdout.puts "Hello"  # equivalent to puts "Hello", default is $stdout
+Hello
+#=> nil
+$stderr.puts "Hello"  # not a visible difference in IRB
+Hello
+#=> nil
+
+$stderr.printf "42/13 is about %.2f\n", 42.0/13  # don't forget about '\n'
+42/13 is about 3.23
+  <% end %>
+</p>
+
+<%= bob_header 'Reading from Stdin' %>
+<p class='commentable' id="stdin">
+  Most common method to read from <code>stdin</code> is <code>gets</code>.
+  Without any argument, <code>gets</code> reads <code>stdin</code> until the end stream or to the newline characters. You can pass a number to it - it would be a number of characters to read, or a string - the separator:
+  <%= bob_code brush: :ruby do %>
+input = gets         # the same as $stdin.gets - default is stdin
+I can type whatever till the newline.
+#=> "I can type whatever till the newline.\n"
+
+input = gets.chomp   # very useful - removes newline just after typing
+This text is without newline
+#=> "This text is without newline"
+
+input = gets(10)  # get only first 10 characters
+This text will be limited to ten characters
+#=> "This text "
+gets              # get the rest of the buffered stdin
+#=> "will be limited to ten characters\n"
+
+input = gets "!"  # specify the separator
+Can write anything, even newlines
+until it reach exclamation!
+#=> "Can write anything, even newlines\nuntil it reach!"
+  <% end %>
+</p>
+
+<%= bob_header 'File Class as a Subclass of IO' %>
+<p class='commentable' id="file1">
+  In the previous chapter we discussed <code>File</code> class. All the build-in <code>std*</code> objects are kind of <code>IO</code> class. And the <code>File</code> object is a subclass of <code>IO</code>. This means we can use the methods from <code>IO</code> to read from and write to files.
+  <%= bob_code brush: :ruby do %>
+$stdin.class                   # stdin, stdout and stderr are IO objects
+#=> IO
+
+File.ancestors                 # all ancestors of File object, contains IO
+#=> [File, IO, File::Constants, Enumerable, Object, PP::ObjectMixin, Kernel, BasicObject]
+
+passwd = File.open('/etc/passwd')  # open /etc/passwd for reading 
+#=> #&lt;File:/etc/passwd&gt;
+passwd.gets                        # gets - default to the newline
+#=> "nobody:*:-2:-2:Unprivileged User:/var/empty:/usr/bin/false\n"
+passwd.gets                        # get the second line, and so on until EOF
+#=> "root:*:0:0:System Administrator:/var/root:/bin/sh\n"
+
+tmp = File.open("/tmp/tmpfile", "w")  # open file for writing: create or truncate
+#=> #&lt;File:/tmp/tmpfile&gt;
+tmp.puts "Begin of the file:"         # puts is a method of the File object
+#=> nil
+tmp.printf "42/13 is %.2f", 42/13.0   # and printf as well
+#=> nil
+tmp.print ".\n"                       
+#=> nil
+tmp.close                             # should close the file descriptor
+#=> nil
+  <% end %>
+</p>
+
+<%= bob_header 'More Methods to Read from IO object' %>
+<p class='commentable' id="more-methods">
+  Of course <code>puts</code> and <code>gets</code> are not only methods available in IO objects. Take a look on the list below and, as usual, see the documentation of IO class: <code>ri IO</code>. <br>
+  Notice that all open files (and other IO objects) are the <em>streams</em>. When you read the part of the file, next read will give you a next part, and so on until it reaches the EOF. File object must know from which byte start the next operation, so it stores this index - this is called the <em>offset</em> of the stream. <br>
+  <code>pos</code> - shows the current offset of the stream in bytes<br>
+  <code>pos=(n)</code> - sets the current offset to n <br>
+  <code>lineno</code> - shows the current offset as a line number <br>
+  <code>lineno=(n)</code> - sets the current offset to n (counts in lines) <br>
+  <code>rewind</code> - "rewind the tape to the beginning" - set offset to zero, the same as <code>file.pos = 0</code> <br>
+  <code>readline</code> - equivalent the <code>gets</code>, reads one line <br>
+  <code>readlines</code> - read all the lines to the EOF, putting it into an array <br>
+  <code>readbyte</code> - reads one byte <br>
+  <code>read(n)</code> - reads n bytes, or to the end, if argument is not given <br>
+  <code>eof?</code> - true if the file descriptor reached EOF
+  <%= bob_code brush: :ruby do %>
+resolv = File.open('/etc/resolv.conf')
+#=> #&lt;File:/etc/resolv.conf&gt;
+resolv.pos        # at the beginning, the offset is zero
+#=> 0
+resolv.readline   # reads the first line (hash and a newline)
+#=> "#\n"
+resolv.lineno     # lineno counts from zero, so we are in the second line now
+#=> 1
+resolv.pos        # but offset counts in bytes
+#=> 2
+resolv.readline   # reads another line
+#=> "# Mac OS X Notice\n"
+resolv.readline   # and again, to push the offset forward
+#=> "#\n"
+resolv.lineno     # now we are in the first line
+#=> 3
+
+resolv.rewind     # set offset to zero - reading from the beginning again
+#=> 0
+resolv.readbyte   # reads just one byte (35 is ASCII code for '#')
+#=> 35
+resolv.pos
+#=> 1
+resolv.readlines  # read rest the lines to the end
+#=> ["\n", "# Mac OS X Notice\n", "#\n", "# This file is not used by the host name and address resolution\n", ...
+
+resolv.pos = 0    # rewind to the beginning
+#=> 0
+resolv.read       # returns the whole file
+#=> "#\n# Mac OS X Notice\n#\n# This file is not used by the host name and address resolution\n# or ..."
+  <% end %>
+</p>
+
+<%= bob_header 'File Object and Blocks' %>
+<p class='commentable' id="more-and-more">
+  It is a good practice to close all the file descriptors before continue your script. As a Sysadmin, you know a lot of programs which leave the files opened. This is annoying and wasting of the system resources. In Ruby, the Garbage Collector can do it for you, but only when the object is out of scope and it is marked to be deleted. If you are not sure about your variable scope, just close the descriptor when you don't need it:
+  <%= bob_code brush: :ruby do %>
+resolv = File.open('/etc/resolv.conf')
+resolv_array = resolv.readlines
+resolv.close
+  <% end %>
+</p>
+
+<p class='commentable' id="more-and-more2">
+  But manually closing the file is not what the Rubyists likes. Hopefully, the <code>File.open</code> method accepts the block with the file object as a block variable. That means that after the block the file instance will be out of the scope and will be automatically closed. Here is a Ruby way to read the file contents:
+  <%= bob_code brush: :ruby do %>
+resolv_array = File.open('/etc/resolv.conf') { |resolv| resolv.readlines }
+  <% end %>
+</p>
+
+<p class='commentable' id="more-and-more3">
+  Speaking of blocks, there is a number of methods on <code>IO</code> object which creates an enumerator from the file, so you can iterate on it. The <code>each_line</code> iterates on every line (there is a shordhand for this: <code>each</code>), <code>each_byte</code> iterates on every byte and assing a number to block variable, <code>each_char</code> is similar to <code>each_byte</code> but it assigns a character instead of the number.
+  <%= bob_code brush: :ruby do %>
+File.open('/etc/resolv.conf').each do |line| # iterates on every line
+..   puts line.chomp  # chomp because puts is adding newline, it could be "print line" instead
+.. end
+#
+# Mac OS X Notice
+...
+  <% end %>
+</p>
+
+<p class='commentable' id="random">
+  Of course you can use this techniques not only on ordinary file. The code below will search <code>/dev/random</code> for a number 42. Please note we introduced here <code>break</code> keyword, which breaks the current iterator. Without this, this code would never end as <code>/dev/urandom</code> never reaches the EOF.
+  <%= bob_code filename: '4.2.io_random.rb' %>
+</p>
+
+<%= bob_header 'Putting All Together - Searching for a String' %>
+<p class='commentable' id="seek-and-destroy">
+  After the bunch of theory, let's proceed to something more practical: searching for the string in all the files in the directory and all the subdirectories. In Shell, you could use something like <code>find directory -type f -exec grep -l {} \;</code>. The equivalent in Ruby will look like this:
+  <%= bob_code filename: '4.2.search_for.rb' %>
+</p>
+
+<p class='commentable' id="seek-and-destroy-2">
+  First at all, we are using <code>Dir.glob</code> to iterate on all the files in a specified directory. Then we check if the filename is just an ordinary file and only in this case we check if the file includes the searching string. <br>
+  Note that the construct <code>if A then if B then</code> is completely the same as <code>if A && B then</code>. When A evaluates to <em>false</em>, B will never be evaluated, because logical AND operator returns <code>false</code> if the left argument returns <em>false</em>. There is no need to evaluate B! <br>
+  Notice that we print the warning message to <code>stderr</code>. This is a good practice in scripting: in some cases we don't want to see this error messages:
+  <%= bob_code brush: :text do %>
+% ruby search_for.rb /etc '127.0.0.1' 2>/dev/null
+Found in /etc/hosts
+Found in /etc/hosts~orig
+Found in /etc/rc.common
+  <% end %>
+</p>
+
+

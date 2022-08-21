@@ -1,0 +1,225 @@
+<%= bob_header 'Enumerable' %>
+<p class='commentable' id="enumerable-mixin">
+  The <code>Enumerable</code> module provides a number of intereting methods for objects which are iterable collection of other objects, like arrays, ranges or hashes. 
+<%= bob_header 'The Each Method' %>
+<p>
+  Every enumerable class must provide method <code>each</code>, which yields every member of the collection one-by-one. This is the only requirement for the protocol. <br>
+  The <code>each</code> method takes the block of code and iterates all the object of the collection, passing it to the given block. It is very similar to <code>for loop</code> (in fact for loop uses the <code>each</code> method, so you can run the for loop on every object which provides this method).
+  <%= bob_code brush: :ruby do %>
+['one', 2, 3, 'four'].each { |x| puts "Processing #{x}." }
+Processing one.
+Processing 2.
+Processing 3.
+Processing four.
+#=> ["one", 2, 3, "four"]
+
+{one: 1, two: 2, three: 3}.each { |k,v| puts "#{k} = #{v}" }
+one = 1
+two = 2
+three = 3
+#=> {:one=>1, :two=>2, :three=>3}
+
+(4..8).each { |x| puts "2^#{x} = #{2**x}" }
+2^4 = 16
+2^5 = 32
+2^6 = 64
+2^7 = 128
+2^8 = 256
+#=> 4..8
+  <%  end %>
+</p>
+
+<p>
+  Notice that for the hash <code>each</code> takes two arguments: a key and a value.
+</p>
+
+
+<%= bob_header 'Selecting Objects from the Collection' %>
+<p class='commentable' id="selecting-objects">
+  The <code>Enumerable</code> mixin provides a number of selection methods. To find all the elements meeting the specified criteria, use <code>select</code>, to search just for a first element - call <code>detect</code> and to collect all the element except some use <code>reject</code>. All this methods use blocks to find out if the element fits.
+  <%= bob_code brush: :ruby do %>
+["one", 2, 3, "four"].select { |x| x.is_a? String }  # find all strings in the araay
+#=> ["one", "four"]
+
+["one", 2, 3, "four"].detect { |x| x.is_a? Fixnum }  # find first number
+#=> 2
+
+["one", 2, 3, "four"].find { |x| x.is_a?(String) && x.length > 3 }  # find is a synonym to detect
+#=> "four"
+
+["one", 2, 3, "four"].reject { |x| x == 2 }          # get everything except 2
+#=> ["one", 3, "four"]
+
+[1,2,3,4,5,6,7].select { |x| (3..6) === x }          # select numbers within the range
+#=> [3, 4, 5, 6]
+  <%  end %>
+</p>
+
+<p class='commentable' id="grep-shortcut">
+  There is a shortcut for the last statement, called <code>grep</code>. It is using triple equality to compare the members of the collection, so you search in a various ways:
+  <%= bob_code brush: :ruby do %>
+[1,2,3,4,5,6,7].grep(3..6)          # select numbers within the range, because 3..6 === 3, 4, 5 and 6
+#=> [3, 4, 5, 6]
+
+["one", 2, 3, "four"].grep String   # select strings (because String === "one" etc)
+#=> ["one", "four"]
+  <%  end %>
+</p>
+
+<%= bob_header 'Question-Like Methods' %>
+<p class='commentable' id="question-methods">
+  Sometimes we do not need to get found elements, we just want to know if they exists. For this there are methods finishing with the question mark, like <code>include?, all?, one?, none?, any?</code>. For convention, methods finishing with the question mark returns <code>true</code> or <code>false</code>.
+  <%= bob_code brush: :ruby do %>
+[1,2,3,4,5,6,7].include? 3                   # 3 is in the array
+#=> true
+
+[1,2,3,4,5,6,7].all? { |x| x.is_a? Fixnum }  # all the elements are Fixnums
+#=> true
+
+[1,2,3,4,5,6,7].one? { |x| x.is_a? Fixnum }  # not exactly one elements is a Fixnum
+#=> false
+
+[1,2,3,4,5,6,7].none? { |x| x.is_a? String } # none of the elements are String
+#=> true
+
+[1,2,3,4,5,6,7].any? { |x| x > 5 }           # is there any element bigger than five?
+#=> true
+  <%  end %>
+</p>
+
+<%= bob_header 'Map' %>
+<p class='commentable' id="mapreduce1">
+  The <code>map</code> method (the synonym to <code>collect</code>) iterates on all elements of the collection, evaluates the given block on it and returns the array of results of this evaluations. It is quite similar to <code>each</code>, but <code>each</code> is not collecting the result.
+  <%= bob_code brush: :ruby do %>
+(1..10).collect { |x| 2**x }               # collect the powers of 10
+#=> [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+
+[1, '2', 3, '4.0'].map { |x| x.to_i }      # all objects to integer
+#=> [1, 2, 3, 4]
+  <%  end %>
+</p>
+
+<%= bob_header 'Shortcut: Unary Ampersand Operator' %>
+<p class='commentable' id="unary-ampersand">
+  There is often a need to apply the only one method to objects in the collection, like <code>{ |x| x.to_i }</code> in the previous example. This syntax can be shortened to just <code>&:to_i</code>, when you give a method name as the Symbol and this method runs on the collection members. <br>
+  The <code>&:method</code> syntax is a combination of unary operator <code>&</code> and symbol <code>:method</code>. Ampersand operator converts the Symbol to the corresponding Proc object and then converts it to the block which can be passed to enumerable method.
+  <%= bob_code brush: :ruby do %>
+[1, '2', 3, '4.0'].map &:to_i
+#=> [1, 2, 3, 4]
+
+["the", "quick", "brown", "fox"].map(& :capitalize)
+#=> ["The", "Quick", "Brown", "Fox"]
+  <%  end %>
+</p>
+
+<%= bob_header 'Reduce' %>
+<p class='commentable' id="mapreduce2">
+  The <code>reduce</code> (also called as <code>inject</code>) function iterates on all of the element of the collection and run the specified block code on the element and the the second value, called <strong>accumulator</strong>. After each step the accumulator is set to the evaluated value of the block. The method returns last accumulated value. <br>
+  It might sound complicated, but it is easy to understad it with an example. Assume we want to sum all the numbers from the collection (an array, a range, etc). We are going to iterate on each member of the collection and add it to the accumulator:
+  <%= bob_code brush: :ruby do %>
+accumulator = 0    # initial value for the accumulator
+#=> 0
+(1..100).each {|element| accumulator = accumulator + element}   # for every element, add it to accumulator
+#=> 1..100
+accumulator        # the result
+#=> 5050
+  <%  end %>
+</p>
+
+<p class='commentable' id="mapreduce3">
+  <code>reduce</code> is the right way to do this. It iterates on the collection, accumulates the value and returns it at the end. The example below do exactly the same as previous, sums the numbers of the collection:
+  <%= bob_code brush: :ruby do %>
+(1..5).reduce(0) do |accumulator, element|
+  puts "element=#{element}, accumulator=#{accumulator}, evaluated value=#{accumulator + element}"
+  accumulator + element
+end
+element=1, accumulator=0, evaluated value=1
+element=2, accumulator=1, evaluated value=3
+element=3, accumulator=3, evaluated value=6
+element=4, accumulator=6, evaluated value=10
+element=5, accumulator=10, evaluated value=15
+#=> 15
+  <%  end %>
+</p>
+<p class='commentable' id="mapreduce4">
+  The argument for the <code>reduce</code> method is initial value for the accumulator (if our case is the number zero). Notice that the block takes two variables - the accumulator and the element.<br>
+  You can see how the accumulator changes after every iteration. It is set to initial value of zero in the first step, then to the evaluated expression <code>1 + 0</code> (as 1 is the first element of the collection), so it becomes 1, and so on, until the end.
+</p>
+<p class='commentable' id="mapreduce5">
+  All this useful functions above (<code>select</code>, <code>any?</code>, <code>map</code>, etc.) could be replaced by calling the <code>reduce</code> method. It is important to understand how reduce works, so please take a closer look on this examples:
+  <%= bob_code brush: :ruby do %>
+(1..10).map { |x| 2 ** x }
+#=> [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+(1..10).reduce([]) { |acc, el| acc << 2 ** el }
+#=> [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024]
+
+["one", 2, 3, "four"].select { |x| x.is_a? String }
+#=> ["one", "four"]
+["one", 2, 3, "four"].reduce([]) { |acc, el| if el.is_a?(String) then acc << el else acc end }
+#=> ["one", "four"]
+
+(1..10).any? { |x| x.even? }
+#=> true
+(1..10).reduce(false) { |acc, el| if el.even? then true else acc end }
+#=> true
+  <%  end %>
+</p>
+<p class='commentable' id="mapreduce6">
+  The first example emulates <code>map</code> function with <code>reduce</code>. It starts with the accumulator to be an empty array <code>[]</code>. Then, on each step, adds the result of expression <code>2 ** el</code> (2 to the power of el) to the end of accumulator array.<br>
+  Another example is a replacement of <code>select</code> method. As above, it starts with empty array. Then, on each step, it checks if the member of the collection is a string and if yes, adds this element to the array. But if not, it returns the accumulator array itself! It is very important, because the next step will operate on the result of evaluating this block. So you can not just do like this: <code>|acc, el| acc << el if el.is_a?(String)</code>, because when the element is not a string, the whole expression returns <code>nil</code> and the accumulator would become <code>nil</code> in the next step. <br>
+  The last example checks if there is any even number if range 1..10. So we start with accumulator set to <code>false</code> and when we reach the even element, set the accumulator to <code>true</code>. Notice that this is not the best way to search the collection, because it should stop searching and return true after the first even number found.
+</p>
+
+<%= bob_header 'Factorial By Reduce' %>
+<p>
+  There is no factorial method in a standard Ruby library, but it is easy to add it using the <code>reduce</code> and the range of integers. We just have to iterate from 1 to the some number and keep the product in the accumulator: 
+  <%= bob_code brush: :ruby do %>
+class Fixnum
+  def factorial
+    (2..self).reduce(1) { |acc, el| acc * el } 
+  end
+end
+
+42.factorial
+#=> 1405006117752879898543142606244511569936384000000000
+
+0.factorial                              # because (2..0).reduce(1) returns 1
+#=> 1
+
+(2..0).reduce(1) { |acc, el| acc * el }  # there is no elements, so reduce becames a value of initial accumulator
+#=> 1
+  <%  end %>
+</p>
+
+<p class='commentable' id="factorial">
+  We start the reduce with number 1 (as this number is the identity element of the product). Then we iterate from 2 to the given number (self), multiplying the number by the accumulator on the each step. Why from 2 and not from 1? It is because it would be wasting of time: multiplying by one changes nothing. <br>
+  The factorial function, by definition, should return 1 for argument of 0. And, with <code>reduce</code>, we have it for free: <code>reduce</code> returns initial value when there is no iterations at all. <br>
+  By the way, take a look how Ruby handles big numbers, try to calculate <code>99999.factorial</code>!
+</p>
+
+
+<%= bob_header 'Including Enumerable Mixin' %>
+<p class='commentable' id="include-enumerale">
+  Like Comparable, Enumerable mixin can be used in your own code. The only requirement is to provide method <code>each</code>, which iterates throgh all the members of the collection. <br>
+  Let's assume we want to treat the string as a collection of characters to create <code>select</code> method on string, like in the previous chapter. Providing a method <code>each</code> and including <code>Enumerable</code> allows us to use all the useful method from the mixin. Because there is a method <code>each_char</code> in the class String which does exactly what we want, the only need is to create an alias:
+  <%= bob_code brush: :ruby do %>
+class String
+  include Enumerable
+  alias_method :each, :each_char
+end
+
+"Hello world.".select { |x| ('a'..'z') === x }     # selects only lowercase
+#=> ["e", "l", "l", "o", "w", "o", "r", "l", "d"]
+
+"Hello world.".map { |x| x.ord }                   # returns the array of Ascii values of the string
+#=> [72, 101, 108, 108, 111, 32, 119, 111, 114, 108, 100, 46]
+
+"Hello world.".grep "o"                            # search for the 'o' in the given string
+#=> ["o", "o"]
+
+"Hello world.".downcase.reduce('a') \
+..   {|acc, char| if char>acc then char else acc end} # returns 'biggest' letter from the string
+#=> "w"
+  <%  end %>
+</p>
+

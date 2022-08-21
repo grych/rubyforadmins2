@@ -1,0 +1,76 @@
+<%= bob_header 'Numbers' %>
+<p class='commentable' id="general">
+  Numbers in Ruby belongs to two general classes: <code>Fixnum</code> - all the fixed-point and <code>Float</code> - for the floating-point numbers. Despite all the numbers are objects, you don't have to initialize them with class method <code>new</code>. The interpreter will find out what type the number is:
+    <%= bob_code brush: :ruby do %>
+42.class           # class of 42 object is Fixnum
+#=> Fixnum
+3.1415926.class    # but of the floating-point object it is Float
+#=> Float
+s = 42 + 3.1415926 # adding integer to real is possible and gives Float
+#=> 45.1415926
+s.class
+#=> Float
+s = 41 + 1.0       # to constrain the value of the expression is Float
+#=> 42.0
+s.class
+#=> Float              # division of two integers gives always integer
+42 / 5
+#=> 8
+42 / 5.0           # to ensure the value of division is a float
+#=> 8.4
+42.fdiv(5)         # or use fload-division method
+#=> 8.4
+    <% end %>
+</p>
+<p class='commentable' id="fixnum">
+  42 is a <code>Fixnum</code>, 3.14 is a <code>Float</code> and the result of adding this two number is a <code>Float</code> as well. In general, all the operations on the numbers, which one of them is a <code>Float</code>, results with the number of <code>Float</code> class. But the operations on the <code>Fixnum</code> gives the number of <code>Fixnum</code>, which can confuse on division, when the result is truncated to the integer - like at the line 13 of above example. To avoid it, declare one of the numbers as <code>Float</code>, simply adding <code>.0</code> to it (line 15). Alternatively, you may use <code>fdiv</code> (float div) instance method of <code>Fixnum</code> class.
+</p>
+<%= bob_header 'Hexadecimal and Binary' %>
+<p class='commentable' id="hex-and-bin">
+  Ruby allows integers to be written not only as decimal numbers, but hexadecimal, octal and binary as well. To write the hex number proceed it with <code>0x</code> (like <code>0xdeadbaca</code>), to wrote an octal use <code>0</code> (like in file permissions in Shell - for example <code>0744</code>), and to deal with binary use <code>0b</code> before the number.<br>
+  Another interesting way to write numbers in Ruby is to add underscore <code>_</code> between the digits. This character is ignored, so it can be used to group some digits. For example, instead of writing one billion this way <code>1000000000</code> you can use another way, more readable for humans: <code>1_000_000_000</code>, or group the half octets in binary numbers: <code>0b0000_1000_1000_1000</code>.
+</p>
+<%= bob_header 'Rational and Complex' %>
+<p class='commentable' id="complex">
+  <code>Fixnum</code> and <code>Float</code> are not the only number classes in Ruby. There is a <code>Complex</code> class as well. We do not want to describe it in details, just take a look at the interesting way of notation - there is a method <code>i</code> for both number classes, which converts the given number into the imaginary part of the complex. So, to write 3 + i5, use natural Ruby syntax: <code>3 + 5.i</code>. This is possible only in Ruby!<br>
+  There is a <code>Rational</code> class in Ruby, so you may work with rational numbers as well. To describe a number 1/2 use the constructor: <code>Rational(1, 2)</code> or convert the number or the string by the <code>to_r</code> method: <code>'1/2'.to_r</code>. Thus, to divde 1/3 by half, you may describe it like this:
+  <%= bob_code brush: :ruby do %>
+'1/3'.to_r / Rational(1, 2)
+#=> (2/3)
+  <% end %>
+</p>
+<%= bob_header 'Methods and Operator on Numbers' %>
+<p class='commentable' id="operators">
+  There is a number of methods and operators for numbers in Ruby. There is no need to describe all of them here, as there is everything about it in Ruby documentation, so let's focus on most interesting:
+  <ul class='circle'>
+    <li><code>class</code> - already known method returns class of the object; notice it is not returning string with its name, but actuall class, which is an object of type Class</li>
+    <li><code>methods</code> - this method refers not only to numbers but for all the objects in Ruby; it returns all the method names available for the given object instance</li>
+    <li><code>zero?</code> - methods ending with question mark usually returns true or false; this function checks if the number is zero (so <code>0.zero?</code> is true)</li>
+    <li><code>round</code> - rounds to floating point number to the nearest fixed point</li>
+    <li><code>==</code> - equality operator allows to compare the numbers of different types: you do not have to bother with conversion. In Ruby <code>42 == 42.0</code> is <code>true</code> </li>
+    <li><code><=></code> comparition operator - often called "a spaceship operator": returns -1 if the object on the left is lesser than the object on the right, 1 - if the right object is greater and 0 if the objects are equal</li>
+    <li><code>**</code> - this is a power operator in Ruby, so <code>2 ** 8</code> gives <code>256</code></li>
+    <li>bitwise operators: <code>& | ^</code> - <code>&</code> does binary AND, <code>|</code> is binary OR and <code>^</code> means XOR; so <code>0b1010 ^ 0b1001 == 0b0011</code></li>
+    <li><code>to_s</code> - converts current number to string</li>
+    <li><code>to_i</code> - converst the number to interger</li>
+  </ul>
+</p>
+<p>
+  <%= bob_code brush: :ruby do %>
+1.class
+#=> Fixnum         # the class of instance 1 is Fixnum
+1.class.class
+#=> Class          # the class of Fixnum (1.class) is Class
+3.14.methods
+#=> [:to_s, :inspect, :coerce, :-@, :+, :-, :*, :/, :quo, :fdiv, :%, :modulo, :divmod, :**, :==, :===, :<=>, :>, :>=, :<, :<=, :eql?, :hash, :to_f, :abs, :magnitude, :zero?, :to_i, :to_int, :floor, :ceil, :round, :truncate, :nan?, :infinite?, :finite?, :numerator, :denominator, :to_r, :rationalize, :arg, :angle, :phase, :singleton_method_added, :i, :+@, :div, :remainder, :real?, :integer?, :nonzero?, :step, :to_c, :real, :imaginary, :imag, :abs2, :rectangular, :rect, :polar, :conjugate, :conj, :pretty_print_cycle, :pretty_print, :between?, :pretty_print_instance_variables, :pretty_print_inspect, :nil?, :=~, :!~, :class, :singleton_class, :clone, :dup, :taint, :tainted?, :untaint, :untrust, :untrusted?, :trust, :freeze, :frozen?, :methods, :singleton_methods, :protected_methods, :private_methods, :public_methods, :instance_variables, :instance_variable_get, :instance_variable_set, :instance_variable_defined?, :remove_instance_variable, :instance_of?, :kind_of?, :is_a?, :tap, :send, :public_send, :respond_to?, :extend, :display, :method, :public_method, :define_singleton_method, :object_id, :to_enum, :enum_for, :pretty_inspect, :equal?, :!, :!=, :instance_eval, :instance_exec, :__send__, :__id__]
+0.5.round
+#=> 1
+0.49.round
+#=> 0
+10.0.to_i
+#=> 10
+10.0.to_s
+#=> "10.0"
+  <% end %>
+</p>
+<p class='commentable' id="methods"></p>
