@@ -19,10 +19,14 @@ defmodule Rubyforadmins2.Chapter do
       |> Path.join("**.heex")
       |> Path.wildcard()
     #IO.inspect(paths)
-    for id <- paths do
+    for chapter <- paths do
       #get_id(id)
-      %Chapter{id: get_id(id)}
+      %Chapter{id: get_id(chapter), title: get_title(chapter)}
     end
+  end
+
+  def get_title(chapter) do
+    "x"
   end
 
   def get_id(chapter) do
